@@ -1,0 +1,315 @@
+{
+  "players": [
+    {
+      "id": "wiafe",
+      "name": "Wiafe",
+      "chessCom": "mr_wiafe"
+    },
+    {
+      "id": "playerwizzz",
+      "name": "playerwizzz",
+      "chessCom": "playerwizzz"
+    },
+    {
+      "id": "b_abudey123",
+      "name": "B_Abudey123",
+      "chessCom": "b_abudey123"
+    },
+    {
+      "id": "el_granto",
+      "name": "Grant",
+      "chessCom": "el_granto"
+    },
+    {
+      "id": "itsmichael_10",
+      "name": "itsmichael_10",
+      "chessCom": "itsmichael_10"
+    },
+    {
+      "id": "sacrif-ice",
+      "name": "Sacrif-ICE",
+      "chessCom": "sacrif-ice"
+    },
+    {
+      "id": "unlikelyeffect",
+      "name": "UnlikelyEffect",
+      "chessCom": "unlikelyeffect"
+    },
+    {
+      "id": "ibrahim_246",
+      "name": "Ibrahim_246",
+      "chessCom": "ibrahim_246"
+    },
+    {
+      "id": "theslymoriaty",
+      "name": "theslymoriaty",
+      "chessCom": "theslymoriaty"
+    },
+    {
+      "id": "super_shogun",
+      "name": "Super_Shogun",
+      "chessCom": "super_shogun"
+    },
+    {
+      "id": "ohenebabaa",
+      "name": "Ohenebabaa",
+      "chessCom": "ohenebabaa"
+    },
+    {
+      "id": "paakumi",
+      "name": "paakumi",
+      "chessCom": "paakumi"
+    },
+    {
+      "id": "biredu",
+      "name": "Biredu",
+      "chessCom": "biredu"
+    },
+    {
+      "id": "justkwabena",
+      "name": "justkwabena",
+      "chessCom": "justkwabena"
+    },
+    {
+      "id": "gmfrimps",
+      "name": "GMfrimps",
+      "chessCom": "gmfrimps"
+    },
+    {
+      "id": "walker5379",
+      "name": "walker5379",
+      "chessCom": "walker5379"
+    },
+    {
+      "id": "creed4o2",
+      "name": "Creed4o2",
+      "chessCom": "creed4o2"
+    },
+    {
+      "id": "wealth98981",
+      "name": "Wealth98981",
+      "chessCom": "wealth98981",
+      "lichess": "Wealth999"
+    },
+    {
+      "id": "bbiinneeyy",
+      "name": "bbiinneeyy",
+      "chessCom": "bbiinneeyy"
+    },
+    {
+      "id": "eja-kelvin",
+      "name": "Eja-kelvin",
+      "chessCom": "eja-kelvin"
+    },
+    {
+      "id": "dazainf",
+      "name": "DazaiNF",
+      "chessCom": "dazainf"
+    },
+    {
+      "id": "flimberjack",
+      "name": "flimberjack",
+      "chessCom": "flimberjack"
+    },
+    {
+      "id": "thefoodvillian",
+      "name": "TheFoodVillian ⬆️",
+      "chessCom": "thefoodvillian"
+    },
+    {
+      "id": "misco_007",
+      "name": "misco_007",
+      "chessCom": "misco_007"
+    },
+    {
+      "id": "tfrimpss",
+      "name": "tfrimpss",
+      "chessCom": "tfrimpss"
+    },
+    {
+      "id": "xadchess_exe",
+      "name": "Xadchess_exe",
+      "chessCom": "xadchess_exe"
+    },
+    {
+      "id": "luciferoffx",
+      "name": "luciferoffx",
+      "chessCom": "luciferoffx"
+    },
+    {
+      "id": "nas-1",
+      "name": "NAS-1",
+      "chessCom": "nas-1"
+    },
+    {
+      "id": "newguy568",
+      "name": "newguy568",
+      "chessCom": "newguy568"
+    },
+    {
+      "id": "marveous",
+      "name": "marveous",
+      "chessCom": "marveous"
+    },
+    {
+      "id": "th3_mad_prince",
+      "name": "TH3_MAD_PRINCE",
+      "chessCom": "th3_mad_prince"
+    },
+    {
+      "id": "jjhnnybored",
+      "name": "Jjhnnybored",
+      "chessCom": "jjhnnybored"
+    },
+    {
+      "id": "jlitch369",
+      "name": "Jlitch369",
+      "chessCom": "jlitch369"
+    },
+    {
+      "id": "ibkomla",
+      "name": "ibkomla",
+      "chessCom": "ibkomla"
+    },
+    {
+      "id": "klassified",
+      "name": "Klassified",
+      "chessCom": "klassified"
+    },
+    {
+      "id": "szethtruthlessofshinovar",
+      "name": "szethtruthlessofshinovar",
+      "chessCom": "szethtruthlessofshinovar"
+    },
+    {
+      "id": "quantumvisio",
+      "name": "QuantumVisio",
+      "chessCom": "quantumvisio"
+    },
+    {
+      "id": "efojensen",
+      "name": "EfoJensen",
+      "chessCom": "efojensen"
+    },
+    {
+      "id": "kaad278",
+      "name": "KAAD278",
+      "chessCom": "kaad278"
+    },
+    {
+      "id": "prabhush28",
+      "name": "PRABHASH28",
+      "chessCom": "prabhash28"
+    },
+    {
+      "id": "godsmh",
+      "name": "Godsmh",
+      "chessCom": "godsmh"
+    },
+    {
+      "id": "hollowcoup",
+      "name": "HollowCoup",
+      "chessCom": "hollowcoup"
+    },
+    {
+      "id": "big-silva",
+      "name": "big-Silva",
+      "chessCom": "big-silva"
+    },
+    {
+      "id": "kingpin2kp",
+      "name": "Kingpin2kp",
+      "chessCom": "kingpin2kp"
+    },
+    {
+      "id": "mawulikossimensah",
+      "name": "MawuliKossiMensah",
+      "chessCom": "mawuliKossiMensah"
+    },
+    {
+      "id": "opongjapheth",
+      "name": "OpongJapheth",
+      "chessCom": "opongjapheth"
+    },
+    {
+      "id": "mtdey4u",
+      "name": "mtdey4u",
+      "chessCom": "mtdey4u"
+    },
+    {
+      "id": "elkobina",
+      "name": "Elkobina",
+      "chessCom": "elkobina"
+    },
+    {
+      "id": "speckles",
+      "name": "Speckles 👨🏿🦯",
+      "chessCom": "speckles"
+    },
+    {
+      "id": "night_knightz",
+      "name": "Night_knightz",
+      "chessCom": "night_knightz"
+    },
+    {
+      "id": "siawlism",
+      "name": "Siawlism",
+      "chessCom": "siawlism"
+    },
+    {
+      "id": "anthstraynoble42",
+      "name": "AnthonyNoble42",
+      "chessCom": "anthonynoble42"
+    },
+    {
+      "id": "enko_hn2",
+      "name": "Enko_hn2",
+      "chessCom": "enko_hn2"
+    },
+    {
+      "id": "da_kvng",
+      "name": "Da_kvng",
+      "chessCom": "da_kvng"
+    },
+    {
+      "id": "brighter146",
+      "name": "BRIGHTER146",
+      "chessCom": "brighter146"
+    },
+    {
+      "id": "kz_947cobalt",
+      "name": "kz_947cobalt",
+      "chessCom": "kz_947cobalt"
+    },
+    {
+      "id": "dominic_nicky",
+      "name": "Dominic_nicky",
+      "chessCom": "dominic_nicky"
+    },
+    {
+      "id": "justyourdod",
+      "name": "Justyourdod",
+      "chessCom": "justyourdod"
+    },
+    {
+      "id": "tim_okang",
+      "name": "tim_okang",
+      "chessCom": "tim_okang"
+    },
+    {
+      "id": "bestgabby",
+      "name": "BestGabby",
+      "chessCom": "bestgabby"
+    },
+    {
+      "id": "welbec",
+      "name": "Welbec",
+      "chessCom": "welbec"
+    },
+    {
+      "id": "brightbravo",
+      "name": "BrightBravo",
+      "chessCom": "brightbravo"
+    }
+  ]
+}

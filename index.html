@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chess Leaderboard</title>
+  <link rel="icon" href="data:,">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -129,8 +130,11 @@
 
     async function fetchData() {
       try {
-        // Fetch players config from repo
-        const playersRes = await fetch('/data/players.json');
+        // Fetch players config from repo (relative so it works under /chess-leaderboard/)
+        const playersRes = await fetch('./data/players.json');
+        if (!playersRes.ok) {
+          throw new Error(`Failed to load players.json: ${playersRes.status}`);
+        }
         playersData = await playersRes.json();
         
         // Fetch snapshots from gist

@@ -11,5 +11,5 @@ out/
 .idea
 .DS_Store
 
-# Data is stored in GitHub Gist, not in the repo
-data/
+# Snapshots are stored in a GitHub Gist; the player list is committed
+data/snapshots.json
