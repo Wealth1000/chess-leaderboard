@@ -3,300 +3,1544 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chess Leaderboard</title>
-  <link rel="icon" href="data:,">
+  <title>The Ladder — Chess Leaderboard</title>
+  <meta name="description" content="Daily chess ratings for the group, ranked on one board.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230B2B22'/%3E%3Crect width='32' height='32' fill='%23F4ECD9'/%3E%3Crect x='32' y='32' width='32' height='32' fill='%23F4ECD9'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=DM+Sans:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --green-950: #071d17;
+      --green-900: #0b2b22;
+      --green-800: #123d30;
+      --buff: #f4ecd9;
+      --buff-deep: #e9ddc4;
+      --ink: #14231d;
+      --muted: #5d6c60;
+      --accent: #e0522c;
+      --accent-deep: #b23b1e;
+      --gold: #d9a441;
+      --line: rgba(20, 35, 29, 0.16);
+      --line-light: rgba(244, 236, 217, 0.18);
+      --display: "Anton", "Arial Narrow", sans-serif;
+      --mono: "Space Mono", "Courier New", monospace;
+      --body: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    *,
+    *::before,
+    *::after { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #f3f4f6;
-      color: #1f2937;
+      margin: 0;
       min-height: 100vh;
+      background:
+        radial-gradient(1100px 560px at 50% -140px, rgba(244, 236, 217, 0.07), transparent 70%),
+        var(--green-900);
+      color: var(--buff);
+      font-family: var(--body);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
     }
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 2rem;
+
+    button,
+    input { font: inherit; }
+
+    button { color: inherit; }
+
+    .shell {
+      width: min(1240px, calc(100% - 40px));
+      margin-inline: auto;
     }
-    header { margin-bottom: 2rem; }
-    h1 { font-size: 2.5rem; font-weight: 700; color: #111827; }
-    .subtitle { color: #6b7280; margin-top: 0.5rem; }
-    .controls { margin-bottom: 1.5rem; }
-    label { display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem; }
-    select {
-      padding: 0.5rem 1rem;
-      border: 1px solid #d1d5db;
-      border-radius: 0.5rem;
-      font-size: 1rem;
-      background: white;
-      max-width: 250px;
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
     }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
-    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
-    .card {
-      background: white;
-      border-radius: 0.75rem;
-      padding: 1.5rem;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+
+    .masthead {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 26px 0;
+      border-bottom: 1px solid var(--line-light);
     }
-    .card h2 { font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; color: #111827; }
-    .card .meta { font-size: 0.875rem; color: #6b7280; margin-bottom: 1rem; }
-    .chart-container { position: relative; height: 300px; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #e5e7eb; }
-    th { font-weight: 600; color: #374151; font-size: 0.875rem; }
-    td { font-size: 0.9375rem; }
-    tr:hover { background: #f9fafb; }
-    .rating { font-weight: 700; color: #111827; }
-    .platforms { font-size: 0.8125rem; color: #6b7280; }
-    .bar-chart {
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .brand-mark {
+      width: 44px;
+      height: 44px;
+      flex: 0 0 auto;
+      background-color: var(--buff);
+      background-image:
+        linear-gradient(45deg, var(--green-900) 25%, transparent 25%, transparent 75%, var(--green-900) 75%),
+        linear-gradient(45deg, var(--green-900) 25%, transparent 25%, transparent 75%, var(--green-900) 75%);
+      background-size: 22px 22px;
+      background-position: 0 0, 11px 11px;
+    }
+
+    .brand-text { display: flex; flex-direction: column; gap: 2px; }
+
+    .brand-name {
+      font-family: var(--display);
+      font-size: 1.34rem;
+      font-weight: 400;
+      letter-spacing: 0.09em;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .brand-sub {
+      color: rgba(244, 236, 217, 0.64);
+      font-size: 0.76rem;
+    }
+
+    .masthead-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: rgba(244, 236, 217, 0.66);
+      font-family: var(--mono);
+      font-size: 0.64rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .masthead-meta time { color: var(--buff); font-weight: 700; }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 4px rgba(224, 82, 44, 0.16);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(300px, 0.75fr);
+      margin-top: 28px;
+      background: var(--buff);
+      color: var(--ink);
+    }
+
+    .champion {
+      position: relative;
+      padding: clamp(26px, 4vw, 42px) clamp(22px, 4vw, 44px) clamp(26px, 3vw, 36px);
+      border-right: 1px solid var(--line);
+    }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 0.64rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      flex: 0 0 auto;
+      background: var(--accent);
+    }
+
+    .champion-name-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .champion-rank {
+      margin-top: 0.4em;
+      padding: 5px 7px;
+      background: var(--accent-deep);
+      color: var(--buff);
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      line-height: 1;
+    }
+
+    .champion-name {
+      margin: 0;
+      font-family: var(--display);
+      font-size: clamp(3.1rem, 6.8vw, 6.2rem);
+      font-weight: 400;
+      letter-spacing: 0.01em;
+      line-height: 0.88;
+      overflow-wrap: anywhere;
+      text-transform: uppercase;
+    }
+
+    .champion-score {
+      display: flex;
+      align-items: baseline;
+      gap: 13px;
+      margin-top: 16px;
+    }
+
+    .champion-score strong {
+      font-family: var(--display);
+      font-size: clamp(4.2rem, 10vw, 8.5rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 0.76;
+    }
+
+    .champion-score span {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .champion-meta {
+      margin: 20px 0 0;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .chase {
+      display: flex;
+      flex-direction: column;
+      padding: clamp(26px, 3.4vw, 38px) clamp(22px, 3vw, 32px) 24px;
+    }
+
+    .chase-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .chase-head .eyebrow { margin-bottom: 0; }
+
+    .chase-note {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 0.54rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .chase-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .chase-row {
+      display: grid;
+      grid-template-columns: 2.1rem minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(20, 35, 29, 0.1);
+    }
+
+    .chase-row:last-child { border-bottom: 0; }
+
+    .chase-rank {
+      color: var(--accent-deep);
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      font-weight: 700;
+    }
+
+    .chase-name {
+      overflow: hidden;
+      font-size: 0.96rem;
+      font-weight: 700;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .chase-score {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      line-height: 1.05;
+    }
+
+    .chase-rating { font-family: var(--display); font-size: 1.18rem; }
+
+    .chase-gap {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 0.54rem;
+    }
+
+    .chase-empty {
+      padding: 20px 0;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .hero-stats {
+      display: grid;
+      grid-column: 1 / -1;
+      grid-template-columns: repeat(4, 1fr);
+      margin: 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .hero-stats > div {
+      padding: 17px 24px 19px;
+      border-right: 1px solid var(--line);
+    }
+
+    .hero-stats > div:last-child { border-right: 0; }
+
+    .hero-stats dt {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 0.57rem;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+
+    .hero-stats dd {
+      margin: 3px 0 0;
+      font-family: var(--display);
+      font-size: 1.8rem;
+      letter-spacing: 0.01em;
+      line-height: 1;
+    }
+
+    .board-section { padding-top: clamp(40px, 6vw, 64px); }
+
+    .section-head {
       display: flex;
       align-items: flex-end;
-      justify-content: space-around;
-      height: 250px;
-      padding: 1rem 0;
-      gap: 0.5rem;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 20px;
     }
-    .bar-item { display: flex; flex-direction: column; align-items: center; flex: 1; }
-    .bar {
+
+    .section-head .eyebrow { color: rgba(244, 236, 217, 0.62); }
+
+    .section-head h2 {
+      margin: 0;
+      color: var(--buff);
+      font-family: var(--display);
+      font-size: clamp(2rem, 4.2vw, 3.5rem);
+      font-weight: 400;
+      letter-spacing: 0.015em;
+      line-height: 0.94;
+      text-transform: uppercase;
+    }
+
+    .board-tools {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 4px;
+    }
+
+    .search-wrap { flex: 0 0 auto; }
+
+    .search-wrap input {
+      width: 248px;
+      padding: 11px 13px;
+      border: 1px solid rgba(244, 236, 217, 0.28);
+      border-radius: 0;
+      outline: none;
+      background: transparent;
+      color: var(--buff);
+      font-size: 0.88rem;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .search-wrap input::placeholder { color: rgba(244, 236, 217, 0.56); }
+
+    .search-wrap input:focus {
+      border-color: var(--accent);
+      background: rgba(244, 236, 217, 0.06);
+    }
+
+    .board-count {
+      color: rgba(244, 236, 217, 0.6);
+      font-family: var(--mono);
+      font-size: 0.61rem;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+      border: 8px solid var(--buff);
+      background: var(--buff);
+      box-shadow: 0 34px 70px rgba(0, 0, 0, 0.3);
+    }
+
+    .tile {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-width: 0;
+      aspect-ratio: 1;
+      padding: clamp(7px, 0.9vw, 12px);
+      overflow: hidden;
+      border: 0;
+      border-radius: 0;
+      text-align: left;
+      cursor: pointer;
+      transition: outline-color 0.15s ease, filter 0.15s ease;
+    }
+
+    .tile--light { background: var(--buff); color: var(--ink); }
+    .tile--dark { background: var(--green-800); color: var(--buff); }
+
+    .tile--leader {
+      background: var(--accent-deep);
+      color: var(--buff);
+    }
+
+    .tile--podium { box-shadow: inset 0 -4px 0 var(--accent); }
+
+    .tile:hover { filter: brightness(1.04); outline: 3px solid var(--accent); outline-offset: -3px; }
+    .tile--leader:hover { outline-color: var(--buff); }
+    .tile:focus-visible { outline: 3px solid var(--gold); outline-offset: -3px; z-index: 2; }
+
+    .tile-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 6px;
       width: 100%;
-      max-width: 80px;
-      background: linear-gradient(to top, #4f46e5, #7c3aed);
-      border-radius: 0.375rem 0.375rem 0 0;
-      min-height: 4px;
-      transition: height 0.3s ease;
     }
-    .bar-value { font-weight: 700; font-size: 0.875rem; margin-bottom: 0.5rem; color: #374151; }
-    .bar-label { font-size: 0.8125rem; color: #6b7280; margin-top: 0.5rem; text-align: center; }
-    .empty { color: #9ca3af; font-style: italic; padding: 2rem; text-align: center; }
-    .loading { color: #6b7280; text-align: center; padding: 2rem; }
-    .error { color: #dc2626; text-align: center; padding: 2rem; }
+
+    .tile-rank {
+      font-family: var(--mono);
+      font-size: clamp(0.48rem, 0.7vw, 0.66rem);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      opacity: 0.78;
+    }
+
+    .tile-platform {
+      overflow: hidden;
+      font-family: var(--mono);
+      font-size: clamp(0.38rem, 0.48vw, 0.52rem);
+      letter-spacing: 0.06em;
+      opacity: 0.7;
+      text-align: right;
+      text-overflow: ellipsis;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .tile-name {
+      width: 100%;
+      overflow: hidden;
+      font-size: clamp(0.65rem, 1vw, 0.95rem);
+      font-weight: 700;
+      line-height: 1.15;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .tile-rating {
+      align-self: flex-end;
+      margin-top: auto;
+      font-family: var(--display);
+      font-size: clamp(1.05rem, 2.1vw, 2rem);
+      letter-spacing: 0.01em;
+      line-height: 0.9;
+    }
+
+    .tile--open { cursor: default; }
+
+    .tile--open.tile--light { background: var(--buff-deep); color: rgba(20, 35, 29, 0.58); }
+    .tile--open.tile--dark { background: var(--green-800); color: rgba(244, 236, 217, 0.58); }
+
+    .tile--open::after {
+      content: "";
+      position: absolute;
+      inset: 7px;
+      border: 1px dashed currentColor;
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    .open-mark {
+      margin: auto;
+      font-family: var(--display);
+      font-size: clamp(1.1rem, 2vw, 1.7rem);
+      line-height: 1;
+    }
+
+    .open-label {
+      font-family: var(--mono);
+      font-size: clamp(0.38rem, 0.48vw, 0.52rem);
+      letter-spacing: 0.08em;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .board-message {
+      display: grid;
+      grid-column: 1 / -1;
+      min-height: 190px;
+      place-items: center;
+      padding: 32px;
+      background: var(--buff);
+      color: var(--muted);
+      font-size: 0.95rem;
+      text-align: center;
+    }
+
+    .board-message strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--ink);
+      font-size: 1.05rem;
+    }
+
+    .board-message button {
+      margin-top: 16px;
+      padding: 10px 16px;
+      border: 0;
+      border-radius: 0;
+      background: var(--ink);
+      color: var(--buff);
+      cursor: pointer;
+      font-family: var(--mono);
+      font-size: 0.64rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .board-message button:hover { background: var(--accent-deep); }
+
+    .board-foot {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 14px 0 0;
+      color: rgba(244, 236, 217, 0.54);
+      font-size: 0.76rem;
+    }
+
+    .board-foot p { margin: 0; }
+
+    .seat-note {
+      font-family: var(--mono);
+      font-size: 0.59rem;
+      letter-spacing: 0.08em;
+      text-align: right;
+      text-transform: uppercase;
+    }
+
+    .data-notice {
+      margin: 16px 0 0;
+      padding: 12px 15px;
+      border: 1px solid rgba(224, 82, 44, 0.55);
+      color: var(--buff);
+      font-size: 0.82rem;
+    }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      margin-top: clamp(48px, 7vw, 72px);
+      padding: 24px 0 42px;
+      border-top: 1px solid var(--line-light);
+      color: rgba(244, 236, 217, 0.58);
+      font-size: 0.75rem;
+    }
+
+    .footer p { margin: 0; }
+
+    .footer-meta {
+      font-family: var(--mono);
+      font-size: 0.58rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    dialog {
+      width: min(760px, calc(100vw - 32px));
+      max-width: none;
+      max-height: calc(100vh - 32px);
+      padding: 0;
+      overflow: auto;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      color: var(--ink);
+    }
+
+    dialog::backdrop {
+      background: rgba(7, 29, 23, 0.82);
+      backdrop-filter: blur(4px);
+    }
+
+    dialog[open] .scorecard { animation: card-in 0.22s ease-out both; }
+
+    @keyframes card-in {
+      from { opacity: 0; transform: translateY(14px) scale(0.985); }
+    }
+
+    .scorecard {
+      background: var(--buff);
+      border: 8px solid var(--buff);
+      box-shadow: 0 42px 90px rgba(0, 0, 0, 0.5);
+    }
+
+    .scorecard-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 12px 16px;
+      background: var(--green-900);
+      color: var(--buff);
+      font-family: var(--mono);
+      font-size: 0.61rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .dialog-close {
+      display: grid;
+      width: 32px;
+      height: 32px;
+      flex: 0 0 auto;
+      place-items: center;
+      border: 1px solid rgba(244, 236, 217, 0.4);
+      border-radius: 0;
+      background: transparent;
+      color: var(--buff);
+      cursor: pointer;
+      font-size: 1.05rem;
+      line-height: 1;
+    }
+
+    .dialog-close:hover,
+    .dialog-close:focus-visible {
+      border-color: var(--accent);
+      color: var(--accent);
+      outline: none;
+    }
+
+    .scorecard-body { padding: clamp(20px, 4vw, 34px); }
+
+    .scorecard-head {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .scorecard-rank {
+      display: grid;
+      width: 52px;
+      height: 52px;
+      flex: 0 0 auto;
+      place-items: center;
+      background: var(--accent-deep);
+      color: var(--buff);
+      font-family: var(--mono);
+      font-size: 0.86rem;
+      font-weight: 700;
+    }
+
+    .scorecard-name {
+      margin: 0;
+      font-family: var(--display);
+      font-size: clamp(2.1rem, 5vw, 3.4rem);
+      font-weight: 400;
+      line-height: 0.9;
+      overflow-wrap: anywhere;
+      text-transform: uppercase;
+    }
+
+    .scorecard-platform {
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 0.59rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .scorecard-rating {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      margin-left: auto;
+      text-align: right;
+    }
+
+    .scorecard-rating strong {
+      font-family: var(--display);
+      font-size: clamp(2.7rem, 7vw, 4.6rem);
+      font-weight: 400;
+      line-height: 0.78;
+    }
+
+    .scorecard-rating span {
+      margin-top: 7px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 0.56rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .chart-block {
+      margin-top: 26px;
+      padding-top: 20px;
+      border-top: 1px solid var(--line);
+    }
+
+    .chart-title-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .chart-title-row h3 {
+      margin: 0;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .chart-title-row span { color: var(--muted); font-size: 0.74rem; }
+
+    .chart-container { position: relative; height: 250px; }
+
+    .first-snapshot { padding-top: 2px; }
+
+    .ghost-line {
+      position: relative;
+      height: 66px;
+      margin-bottom: 16px;
+    }
+
+    .ghost-line::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      right: 0;
+      left: 0;
+      border-top: 1px dashed rgba(20, 35, 29, 0.26);
+    }
+
+    .ghost-line::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      right: 0;
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 5px rgba(224, 82, 44, 0.16);
+      transform: translateY(-50%);
+    }
+
+    .first-snapshot p {
+      max-width: 48ch;
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.55;
+    }
+
+    .first-snapshot p strong { color: var(--ink); }
+
+    .platform-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .chip {
+      padding: 5px 9px;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 0.57rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .scorecard-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      margin: 24px 0 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .scorecard-stats > div {
+      padding: 14px 18px 0 0;
+      border-right: 1px solid var(--line);
+    }
+
+    .scorecard-stats > div:last-child { border-right: 0; }
+
+    .scorecard-stats dt {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 0.54rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .scorecard-stats dd {
+      margin: 5px 0 0;
+      font-family: var(--display);
+      font-size: 1.3rem;
+      line-height: 1;
+    }
+
+    @media (max-width: 1000px) {
+      .hero { grid-template-columns: 1fr; }
+      .champion { border-right: 0; border-bottom: 1px solid var(--line); }
+      .chase { padding-bottom: 20px; }
+    }
+
+    @media (max-width: 760px) {
+      .board { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 700px) {
+      .shell { width: calc(100% - 24px); }
+      .masthead { flex-wrap: wrap; gap: 14px; padding: 20px 0; }
+      .brand-sub { display: none; }
+      .masthead-meta { font-size: 0.56rem; }
+      .champion-name-row { gap: 11px; }
+      .champion-score strong { font-size: min(25vw, 6.5rem); }
+      .hero-stats { grid-template-columns: repeat(2, 1fr); }
+      .hero-stats > div:nth-child(2) { border-right: 0; }
+      .hero-stats > div:nth-child(-n + 2) { border-bottom: 1px solid var(--line); }
+      .hero-stats > div { padding: 14px 18px 16px; }
+      .hero-stats dd { font-size: 1.55rem; }
+      .section-head { flex-direction: column; align-items: flex-start; gap: 16px; }
+      .board-tools { width: 100%; }
+      .search-wrap { flex: 1; }
+      .search-wrap input { width: 100%; }
+      .board { border-width: 5px; }
+      .board-foot { flex-direction: column; gap: 8px; }
+      .seat-note { text-align: left; }
+      .footer { flex-direction: column; gap: 10px; }
+      .tile { padding: 6px; }
+      .tile-platform { display: none; }
+      .tile-name { font-size: 0.68rem; }
+      .tile-rank { font-size: 0.48rem; }
+      .tile-rating { font-size: 1.02rem; }
+      .open-label { font-size: 0.38rem; }
+      .scorecard-stats { grid-template-columns: repeat(2, 1fr); }
+      .scorecard-stats > div:nth-child(2) { border-right: 0; }
+      .scorecard-rating { margin-left: 0; align-items: flex-start; text-align: left; }
+      .chart-container { height: 220px; }
+    }
+
+    @media (max-width: 430px) {
+      .board-tools { flex-wrap: wrap; }
+      .champion-name { font-size: clamp(2.5rem, 13vw, 4rem); }
+      .tile-rating { font-size: 0.9rem; }
+      .open-label { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>♟️ Chess Leaderboard</h1>
-      <p class="subtitle">Tracking our group's rating growth</p>
+  <div class="shell">
+    <header class="masthead">
+      <a class="brand" href="./">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-text">
+          <span class="brand-name">The Ladder</span>
+          <span class="brand-sub">Chess ratings for the group</span>
+        </span>
+      </a>
+      <div class="masthead-meta">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span>Snapshot</span>
+        <time id="masthead-date" datetime="">—</time>
+      </div>
     </header>
 
-    <div class="controls">
-      <label for="player-select">Select Player</label>
-      <select id="player-select"><option value="">Loading...</option></select>
-    </div>
-
-    <div class="grid">
-      <div class="card">
-        <h2 id="chart-title">Rating History</h2>
-        <div class="chart-container" id="chart-wrapper">
-          <div class="loading">Loading data...</div>
+    <main>
+      <section class="hero" aria-labelledby="champion-name">
+        <div class="champion">
+          <p class="eyebrow">Top of the board</p>
+          <div class="champion-name-row">
+            <span class="champion-rank" id="champion-rank">01</span>
+            <h1 class="champion-name" id="champion-name">Reading the board</h1>
+          </div>
+          <div class="champion-score">
+            <strong id="champion-rating">—</strong>
+            <span>rating</span>
+          </div>
+          <p class="champion-meta" id="champion-meta">Fetching the latest snapshot…</p>
         </div>
-      </div>
 
-      <div class="card">
-        <h2>Leaderboard</h2>
-        <p class="meta" id="latest-date">Loading...</p>
-        <table>
-          <thead>
-            <tr>
-              <th>Rank</th>
-              <th>Player</th>
-              <th style="text-align: right">Rating</th>
-              <th>Platforms</th>
-            </tr>
-          </thead>
-          <tbody id="leaderboard-body">
-            <tr><td colspan="4" class="loading">Loading...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+        <div class="chase">
+          <div class="chase-head">
+            <p class="eyebrow">The chase</p>
+            <span class="chase-note">points behind</span>
+          </div>
+          <ol class="chase-list" id="chase-list">
+            <li class="chase-empty">Loading…</li>
+          </ol>
+        </div>
 
-    <div class="card">
-      <h2>Group Comparison</h2>
-      <div class="bar-chart" id="bar-chart">
-        <div class="loading">Loading...</div>
-      </div>
-    </div>
+        <dl class="hero-stats">
+          <div>
+            <dt>Players</dt>
+            <dd id="stat-players">—</dd>
+          </div>
+          <div>
+            <dt>Club average</dt>
+            <dd id="stat-average">—</dd>
+          </div>
+          <div>
+            <dt>Top-10 cut</dt>
+            <dd id="stat-top10">—</dd>
+          </div>
+          <div>
+            <dt id="stat-seats-label">Seats open</dt>
+            <dd id="stat-seats">—</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="board-section" aria-labelledby="board-heading">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">The club board</p>
+            <h2 id="board-heading">Every player, ranked.</h2>
+          </div>
+          <div class="board-tools">
+            <div class="search-wrap">
+              <label for="player-search" class="sr-only">Search players</label>
+              <input id="player-search" type="search" placeholder="Find a player" autocomplete="off" spellcheck="false">
+            </div>
+            <span class="board-count" id="board-count">Loading…</span>
+          </div>
+        </div>
+
+        <div class="board" id="board" aria-live="polite">
+          <div class="board-message">Reading the board…</div>
+        </div>
+
+        <div class="board-foot">
+          <p>Click any square for a player scorecard and rating history.</p>
+          <p class="seat-note" id="seat-note">—</p>
+        </div>
+
+        <p class="data-notice" id="data-notice" hidden></p>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>Ratings pulled from public chess.com and Lichess profiles.</p>
+      <p class="footer-meta">Daily snapshot · 09:00 UTC</p>
+    </footer>
   </div>
+
+  <dialog id="player-dialog" aria-labelledby="dialog-name">
+    <div class="scorecard">
+      <div class="scorecard-bar">
+        <span>Player scorecard</span>
+        <button type="button" class="dialog-close" aria-label="Close scorecard">✕</button>
+      </div>
+      <div class="scorecard-body">
+        <div class="scorecard-head">
+          <span class="scorecard-rank" id="dialog-rank" aria-hidden="true">—</span>
+          <div>
+            <h2 class="scorecard-name" id="dialog-name">—</h2>
+            <p class="scorecard-platform" id="dialog-platform">—</p>
+          </div>
+          <div class="scorecard-rating">
+            <strong id="dialog-rating">—</strong>
+            <span>rating</span>
+          </div>
+        </div>
+
+        <div class="chart-block">
+          <div class="chart-title-row">
+            <h3>Rating history</h3>
+            <span id="dialog-history-note">—</span>
+          </div>
+          <div class="chart-container" id="chart-wrapper"></div>
+        </div>
+
+        <dl class="scorecard-stats">
+          <div>
+            <dt>Rank</dt>
+            <dd id="dialog-rank-stat">—</dd>
+          </div>
+          <div>
+            <dt>Behind leader</dt>
+            <dd id="dialog-gap">—</dd>
+          </div>
+          <div>
+            <dt>Snapshot</dt>
+            <dd id="dialog-date">—</dd>
+          </div>
+        </dl>
+      </div>
+    </div>
+  </dialog>
 
   <script>
     const GIST_ID = 'cad49ad4e311a1b23628e8a622a40386';
-    const COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8'];
-    
+    const GIST_URL = `https://gist.githubusercontent.com/Wealth1000/${GIST_ID}/raw/snapshots.json`;
+    const BOARD_SQUARES = 64;
+    const PLATFORM_COLORS = ['#b23b1e', '#2f6b54', '#c58b1e'];
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const board = document.getElementById('board');
+    const searchInput = document.getElementById('player-search');
+    const dialog = document.getElementById('player-dialog');
+
     let playersData = null;
-    let snapshotsData = null;
+    let snapshotsData = { snapshots: [] };
+    let ranked = [];
+    let leader = null;
+    let latestDate = '';
+    let chartInstance = null;
+    let snapshotWarning = false;
+
+    const padRank = rank => String(rank).padStart(2, '0');
+    const formatNumber = value => value == null ? '—' : value.toLocaleString('en-US');
+    const escapeHtml = value => String(value).replace(/[&<>"']/g, character => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    })[character]);
+
+    function formatDate(isoDate) {
+      if (!isoDate) return '—';
+      const date = new Date(`${isoDate}T00:00:00`);
+      if (Number.isNaN(date.getTime())) return isoDate;
+      return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    function formatShortDate(isoDate) {
+      const date = new Date(`${isoDate}T00:00:00`);
+      if (Number.isNaN(date.getTime())) return isoDate;
+      return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+    }
+
+    function ratingFor(snapshot) {
+      const ratings = snapshot?.ratings
+        ?.map(rating => rating.rating)
+        .filter(rating => typeof rating === 'number');
+      return ratings?.length ? Math.max(...ratings) : null;
+    }
+
+    function platformLabel(platforms) {
+      if (!platforms?.length) return 'No data';
+      if (platforms.length > 1) return `${platforms.length} platforms`;
+      return platforms[0] === 'chess.com' ? 'Chess.com' : 'Lichess';
+    }
 
     async function fetchData() {
-      try {
-        // Fetch players config from repo (relative so it works under /chess-leaderboard/)
-        const playersRes = await fetch('./data/players.json');
-        if (!playersRes.ok) {
-          throw new Error(`Failed to load players.json: ${playersRes.status}`);
-        }
-        playersData = await playersRes.json();
-        
-        // Fetch snapshots from gist
-        const gistRes = await fetch(`https://gist.githubusercontent.com/Wealth1000/${GIST_ID}/raw/snapshots.json`);
-        if (gistRes.ok) {
-          snapshotsData = await gistRes.json();
-        } else {
+      const playersRequest = fetch('./data/players.json');
+      const gistRequest = fetch(GIST_URL, { cache: 'no-store' }).catch(() => null);
+
+      const playersResponse = await playersRequest;
+      if (!playersResponse.ok) {
+        throw new Error(`The player list returned ${playersResponse.status}.`);
+      }
+      playersData = await playersResponse.json();
+
+      const gistResponse = await gistRequest;
+      if (gistResponse?.ok) {
+        try {
+          const data = await gistResponse.json();
+          snapshotsData = Array.isArray(data?.snapshots) ? data : { snapshots: [] };
+        } catch (error) {
           snapshotsData = { snapshots: [] };
+          snapshotWarning = true;
         }
-      } catch (e) {
-        console.error('Failed to fetch data:', e);
-        document.getElementById('chart-wrapper').innerHTML = '<div class="error">Failed to load data. Please refresh.</div>';
+      } else {
+        snapshotsData = { snapshots: [] };
+        snapshotWarning = true;
       }
     }
 
-    function getRating(snapshot) {
-      const lichess = snapshot.ratings.find(r => r.platform === 'lichess');
-      const chessCom = snapshot.ratings.find(r => r.platform === 'chess.com');
-      return lichess?.rating ?? chessCom?.rating ?? null;
+    function buildRanked() {
+      const dates = [...new Set(snapshotsData.snapshots.map(snapshot => snapshot.date).filter(Boolean))].sort();
+      latestDate = dates[dates.length - 1] ?? '';
+      const latestSnapshots = latestDate
+        ? snapshotsData.snapshots.filter(snapshot => snapshot.date === latestDate)
+        : [];
+      const snapshotsByPlayer = new Map(latestSnapshots.map(snapshot => [snapshot.playerId, snapshot]));
+
+      ranked = playersData.players
+        .map(player => {
+          const snapshot = snapshotsByPlayer.get(player.id) ?? null;
+          const platforms = snapshot?.ratings?.map(rating => rating.platform) ?? [];
+          const aliasText = [player.id, player.name, player.chessCom, player.lichess]
+            .filter(Boolean)
+            .join(' ')
+            .toLowerCase();
+
+          return {
+            ...player,
+            snapshot,
+            platforms,
+            rating: ratingFor(snapshot),
+            aliasText
+          };
+        })
+        .sort((a, b) => (b.rating ?? -1) - (a.rating ?? -1));
+
+      ranked.forEach((player, index) => { player.rank = index + 1; });
+      leader = ranked.find(player => player.rating != null) ?? null;
     }
 
-    function initPlayerSelect() {
-      const select = document.getElementById('player-select');
-      select.innerHTML = '';
-      playersData.players.forEach(p => {
-        const opt = document.createElement('option');
-        opt.value = p.id;
-        opt.textContent = p.name;
-        select.appendChild(opt);
+    function renderMasthead() {
+      const dateElement = document.getElementById('masthead-date');
+      if (latestDate) {
+        dateElement.textContent = formatDate(latestDate);
+        dateElement.dateTime = latestDate;
+      } else {
+        dateElement.textContent = 'No snapshot';
+        dateElement.removeAttribute('datetime');
+      }
+    }
+
+    function renderHero() {
+      const rankElement = document.getElementById('champion-rank');
+      const nameElement = document.getElementById('champion-name');
+      const ratingElement = document.getElementById('champion-rating');
+      const metaElement = document.getElementById('champion-meta');
+      const chaseList = document.getElementById('chase-list');
+      const ratedPlayers = ranked.filter(player => player.rating != null);
+
+      if (!leader) {
+        rankElement.textContent = '—';
+        nameElement.textContent = 'No ratings yet';
+        ratingElement.textContent = '—';
+        metaElement.textContent = snapshotWarning
+          ? 'Ratings did not load. Reload the page to try again.'
+          : 'The first daily snapshot will fill the board.';
+        chaseList.innerHTML = '<li class="chase-empty">No ratings to chase yet.</li>';
+      } else {
+        rankElement.textContent = padRank(leader.rank);
+        nameElement.textContent = leader.name;
+        ratingElement.textContent = formatNumber(leader.rating);
+
+        const gap = ratedPlayers[1] ? leader.rating - ratedPlayers[1].rating : 0;
+        const platformText = [...new Set(leader.platforms)].join(' + ') || 'rating logged';
+        const gapText = ratedPlayers[1]
+          ? (gap > 0 ? `${formatNumber(gap)} points clear of #2` : 'level with #2')
+          : 'first rating on the board';
+        metaElement.textContent = `${platformText} · ${gapText}`;
+
+        const chasers = ratedPlayers.slice(1, 6);
+        chaseList.innerHTML = chasers.length
+          ? chasers.map(player => `
+              <li class="chase-row">
+                <span class="chase-rank">${padRank(player.rank)}</span>
+                <span class="chase-name" title="${escapeHtml(player.name)}">${escapeHtml(player.name)}</span>
+                <span class="chase-score">
+                  <span class="chase-rating">${formatNumber(player.rating)}</span>
+                  <span class="chase-gap">−${formatNumber(leader.rating - player.rating)}</span>
+                </span>
+              </li>
+            `).join('')
+          : '<li class="chase-empty">No one else is on the board yet.</li>';
+      }
+
+      const playerCount = playersData.players.length;
+      const average = ratedPlayers.length
+        ? Math.round(ratedPlayers.reduce((total, player) => total + player.rating, 0) / ratedPlayers.length)
+        : null;
+      const top10 = ratedPlayers.length
+        ? ratedPlayers[Math.min(9, ratedPlayers.length - 1)].rating
+        : null;
+      const openSeats = BOARD_SQUARES - playerCount;
+
+      document.getElementById('stat-players').textContent = formatNumber(playerCount);
+
+      const averageElement = document.getElementById('stat-average');
+      averageElement.textContent = formatNumber(average);
+
+      const top10Element = document.getElementById('stat-top10');
+      top10Element.textContent = formatNumber(top10);
+
+      const seatsLabel = document.getElementById('stat-seats-label');
+      const seatsValue = document.getElementById('stat-seats');
+      if (openSeats > 0) {
+        seatsLabel.textContent = 'Seats open';
+        seatsValue.textContent = padRank(openSeats);
+      } else if (openSeats === 0) {
+        seatsLabel.textContent = 'Board status';
+        seatsValue.textContent = 'Full';
+      } else {
+        seatsLabel.textContent = 'Extra players';
+        seatsValue.textContent = `+${Math.abs(openSeats)}`;
+      }
+
+      const seatNote = document.getElementById('seat-note');
+      if (openSeats > 0) {
+        seatNote.textContent = `${BOARD_SQUARES} squares · ${playerCount} players · ${openSeats} open`;
+      } else if (openSeats === 0) {
+        seatNote.textContent = `${BOARD_SQUARES} squares · ${playerCount} players · full board`;
+      } else {
+        seatNote.textContent = `${playerCount} players · board expanded`;
+      }
+    }
+
+    function createTile(player, index) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = `tile ${index % 2 === 0 ? 'tile--light' : 'tile--dark'}`;
+      if (player.rank === 1) button.classList.add('tile--leader');
+      else if (player.rank <= 3) button.classList.add('tile--podium');
+      button.dataset.playerId = player.id;
+      button.setAttribute('aria-label', `Number ${player.rank}: ${player.name}, ${player.rating == null ? 'unrated' : `${player.rating} rating`}. Open scorecard.`);
+      button.innerHTML = `
+        <span class="tile-top">
+          <span class="tile-rank">${padRank(player.rank)}</span>
+          <span class="tile-platform">${escapeHtml(platformLabel(player.platforms))}</span>
+        </span>
+        <span class="tile-name" title="${escapeHtml(player.name)}">${escapeHtml(player.name)}</span>
+        <span class="tile-rating">${formatNumber(player.rating)}</span>
+      `;
+      button.addEventListener('click', () => openPlayer(player.id));
+      return button;
+    }
+
+    function createOpenTile(index) {
+      const tile = document.createElement('div');
+      tile.className = `tile tile--open ${index % 2 === 0 ? 'tile--light' : 'tile--dark'}`;
+      tile.setAttribute('aria-hidden', 'true');
+      tile.innerHTML = `
+        <span class="tile-top"><span class="tile-rank">—</span></span>
+        <span class="open-mark">+</span>
+        <span class="open-label">Open seat</span>
+      `;
+      return tile;
+    }
+
+    function applyBoardParity() {
+      const columns = getComputedStyle(board).gridTemplateColumns.split(' ').filter(Boolean).length || 8;
+      [...board.children].forEach((tile, index) => {
+        if (!tile.classList.contains('tile')) return;
+        const row = Math.floor(index / columns);
+        const column = index % columns;
+        const isLight = (row + column) % 2 === 0;
+        tile.classList.toggle('tile--light', isLight);
+        tile.classList.toggle('tile--dark', !isLight);
       });
-      if (playersData.players.length > 0) {
-        select.value = playersData.players[0].id;
-      }
     }
 
-    function renderLineChart(playerId, playerName) {
-      const wrapper = document.getElementById('chart-wrapper');
-      wrapper.innerHTML = '<canvas id="lineChart"></canvas>';
-      
-      const playerSnapshots = snapshotsData.snapshots.filter(s => s.playerId === playerId);
-      document.getElementById('chart-title').textContent = `${playerName} - Rating History`;
+    function renderBoard(query = '') {
+      const needle = query.trim().toLowerCase();
+      const filtering = needle.length > 0;
+      const visiblePlayers = filtering
+        ? ranked.filter(player => player.aliasText.includes(needle))
+        : ranked;
 
-      if (playerSnapshots.length === 0) {
-        wrapper.innerHTML = '<div class="empty">No data yet</div>';
+      board.innerHTML = '';
+      board.classList.toggle('board--message', visiblePlayers.length === 0);
+
+      if (visiblePlayers.length === 0) {
+        board.innerHTML = `
+          <div class="board-message">
+            <div>
+              <strong>No player matches “${escapeHtml(query.trim())}”.</strong>
+              Try a name or username from the group.
+            </div>
+          </div>
+        `;
+        document.getElementById('board-count').textContent = `0 of ${ranked.length}`;
         return;
       }
 
-      const ctx = document.getElementById('lineChart').getContext('2d');
-      const platforms = [...new Set(playerSnapshots.flatMap(s => s.ratings.map(r => r.platform)))];
-      const dates = [...new Set(playerSnapshots.map(s => s.date))].sort();
+      visiblePlayers.forEach((player, index) => {
+        board.appendChild(createTile(player, index));
+      });
 
-      const datasets = platforms.map((platform, i) => {
-        const data = dates.map(date => {
-          const snap = playerSnapshots.find(s => s.date === date);
-          const rating = snap?.ratings.find(r => r.platform === platform)?.rating;
-          return rating ?? null;
-        });
+      if (!filtering && visiblePlayers.length < BOARD_SQUARES) {
+        for (let index = visiblePlayers.length; index < BOARD_SQUARES; index += 1) {
+          board.appendChild(createOpenTile(index));
+        }
+      }
+
+      document.getElementById('board-count').textContent = filtering
+        ? `${visiblePlayers.length} of ${ranked.length}`
+        : `${ranked.length} players`;
+
+      requestAnimationFrame(applyBoardParity);
+    }
+
+    function openPlayer(playerId) {
+      const player = ranked.find(entry => entry.id === playerId);
+      if (!player) return;
+      renderScorecard(player);
+      if (typeof dialog.showModal === 'function') {
+        dialog.showModal();
+      } else {
+        dialog.setAttribute('open', '');
+      }
+    }
+
+    function renderScorecard(player) {
+      const ratedPlayers = ranked.filter(entry => entry.rating != null);
+      const rankText = player.rating == null ? '—' : padRank(player.rank);
+      const gapText = player.rating == null
+        ? '—'
+        : (leader && leader.id !== player.id ? `−${formatNumber(leader.rating - player.rating)}` : 'Leader');
+
+      document.getElementById('dialog-rank').textContent = rankText;
+      document.getElementById('dialog-name').textContent = player.name;
+      document.getElementById('dialog-platform').textContent = player.platforms.length
+        ? player.platforms.join(' · ')
+        : 'No platform data';
+      document.getElementById('dialog-rating').textContent = formatNumber(player.rating);
+      document.getElementById('dialog-rank-stat').textContent = player.rating == null
+        ? 'Unrated'
+        : `#${rankText} of ${ratedPlayers.length}`;
+      document.getElementById('dialog-gap').textContent = gapText;
+      document.getElementById('dialog-date').textContent = formatDate(latestDate);
+
+      renderChart(player);
+    }
+
+    function renderChart(player) {
+      const chartWrapper = document.getElementById('chart-wrapper');
+      const historyNote = document.getElementById('dialog-history-note');
+      if (chartInstance) {
+        chartInstance.destroy();
+        chartInstance = null;
+      }
+
+      const playerSnapshots = snapshotsData.snapshots
+        .filter(snapshot => snapshot.playerId === player.id)
+        .sort((a, b) => a.date.localeCompare(b.date));
+      const dates = [...new Set(playerSnapshots.map(snapshot => snapshot.date))];
+      const platforms = [...new Set(playerSnapshots.flatMap(snapshot => snapshot.ratings.map(rating => rating.platform)))];
+
+      if (dates.length < 2) {
+        historyNote.textContent = dates.length === 1 ? 'First snapshot' : 'No snapshots yet';
+        chartWrapper.innerHTML = `
+          <div class="first-snapshot">
+            <div class="ghost-line" aria-hidden="true"></div>
+            <p><strong>${dates.length === 1 ? 'The line starts here.' : 'No rating history yet.'}</strong>
+            ${dates.length === 1
+              ? 'This is the first snapshot. Check back after the next daily update to see the trend.'
+              : 'This player will appear on the chart after the next daily snapshot.'}</p>
+            ${platforms.length
+              ? `<div class="platform-chips">${platforms.map(platform => `<span class="chip">${escapeHtml(platform)}</span>`).join('')}</div>`
+              : ''}
+          </div>
+        `;
+        return;
+      }
+
+      historyNote.textContent = `${dates.length} snapshots`;
+      chartWrapper.innerHTML = '<canvas id="player-chart"></canvas>';
+      const context = document.getElementById('player-chart').getContext('2d');
+
+      const datasets = platforms.map((platform, index) => {
+        const color = PLATFORM_COLORS[index % PLATFORM_COLORS.length];
         return {
           label: platform,
-          data,
-          borderColor: COLORS[i % COLORS.length],
-          backgroundColor: COLORS[i % COLORS.length] + '20',
-          tension: 0.3,
-          fill: false,
+          data: dates.map(date => {
+            const snapshot = playerSnapshots.find(entry => entry.date === date);
+            return snapshot?.ratings.find(rating => rating.platform === platform)?.rating ?? null;
+          }),
+          borderColor: color,
+          backgroundColor: color,
+          borderWidth: 2.5,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          pointBackgroundColor: color,
+          pointBorderColor: '#f4ecd9',
+          pointBorderWidth: 1.5,
+          tension: 0.28,
+          spanGaps: true,
+          fill: false
         };
       });
 
-      new Chart(ctx, {
+      chartInstance = new Chart(context, {
         type: 'line',
-        data: { labels: dates, datasets },
+        data: {
+          labels: dates.map(formatShortDate),
+          datasets
+        },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { position: 'top' } },
-          scales: {
-            y: { beginAtZero: false, title: { display: true, text: 'Rating' } },
-            x: { ticks: { maxTicksLimit: 10 } },
+          animation: prefersReducedMotion ? false : { duration: 420 },
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                usePointStyle: true,
+                pointStyle: 'circle',
+                boxWidth: 7,
+                boxHeight: 7,
+                padding: 16,
+                color: '#14231d',
+                font: { family: "'Space Mono', monospace", size: 10 }
+              }
+            },
+            tooltip: {
+              backgroundColor: '#14231d',
+              titleColor: '#f4ecd9',
+              bodyColor: '#f4ecd9',
+              padding: 10,
+              titleFont: { family: "'Space Mono', monospace", size: 10 },
+              bodyFont: { family: "'DM Sans', sans-serif", size: 12 }
+            }
           },
+          scales: {
+            x: {
+              grid: { display: false },
+              border: { color: 'rgba(20, 35, 29, 0.22)' },
+              ticks: {
+                color: '#5d6c60',
+                maxRotation: 0,
+                font: { family: "'Space Mono', monospace", size: 9 }
+              }
+            },
+            y: {
+              beginAtZero: false,
+              border: { display: false },
+              grid: { color: 'rgba(20, 35, 29, 0.12)' },
+              ticks: {
+                color: '#5d6c60',
+                precision: 0,
+                font: { family: "'Space Mono', monospace", size: 9 }
+              }
+            }
+          }
         }
       });
     }
 
-    function renderLeaderboard() {
-      const dates = [...new Set(snapshotsData.snapshots.map(s => s.date))].sort();
-      const latestDate = dates[dates.length - 1];
-      document.getElementById('latest-date').textContent = `Latest: ${latestDate || 'No data'}`;
-
-      const tbody = document.getElementById('leaderboard-body');
-      tbody.innerHTML = '';
-
-      if (!latestDate) {
-        tbody.innerHTML = '<tr><td colspan="4" class="empty">No data yet</td></tr>';
-        return;
+    function renderDataNotice() {
+      const notice = document.getElementById('data-notice');
+      if (snapshotWarning) {
+        notice.hidden = false;
+        notice.textContent = 'Ratings did not load. The player list is here, but ratings are unavailable. Reload the page to try again.';
+      } else if (snapshotsData.snapshots.length === 0) {
+        notice.hidden = false;
+        notice.textContent = 'No snapshots yet. The board will rank players after the next daily update.';
+      } else {
+        notice.hidden = true;
       }
-
-      const latest = snapshotsData.snapshots
-        .filter(s => s.date === latestDate)
-        .map(s => ({ ...s, rating: getRating(s) }))
-        .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
-
-      latest.forEach((player, index) => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${index + 1}</td>
-          <td>${player.playerName}</td>
-          <td style="text-align: right" class="rating">${player.rating ?? 'N/A'}</td>
-          <td class="platforms">${player.ratings.map(r => r.platform).join(', ')}</td>
-        `;
-        tbody.appendChild(row);
-      });
     }
 
-    function renderBarChart() {
-      const container = document.getElementById('bar-chart');
-      const dates = [...new Set(snapshotsData.snapshots.map(s => s.date))].sort();
-      const latestDate = dates[dates.length - 1];
-
-      if (!latestDate) {
-        container.innerHTML = '<div class="empty">No data yet</div>';
-        return;
-      }
-
-      const latest = snapshotsData.snapshots.filter(s => s.date === latestDate);
-      const ratings = latest.map(s => getRating(s) ?? 0);
-      const maxRating = Math.max(...ratings.filter(r => r > 0), 1);
-
-      container.innerHTML = '';
-      latest.forEach((player, i) => {
-        const rating = ratings[i];
-        const height = rating > 0 ? (rating / maxRating) * 100 : 4;
-        const item = document.createElement('div');
-        item.className = 'bar-item';
-        item.innerHTML = `
-          <div class="bar-value">${rating || 'N/A'}</div>
-          <div class="bar" style="height: ${height}%; background: ${COLORS[i % COLORS.length]}"></div>
-          <div class="bar-label">${player.playerName}</div>
-        `;
-        container.appendChild(item);
-      });
-    }
-
-    function update() {
-      const selected = document.getElementById('player-select').value;
-      const player = playersData.players.find(p => p.id === selected);
-      if (player) {
-        renderLineChart(selected, player.name);
-      }
-      renderLeaderboard();
-      renderBarChart();
+    function renderFatalError(message) {
+      document.getElementById('champion-name').textContent = 'Unavailable';
+      document.getElementById('champion-rating').textContent = '—';
+      document.getElementById('champion-meta').textContent = message;
+      document.getElementById('champion-rank').textContent = '—';
+      document.getElementById('chase-list').innerHTML = '<li class="chase-empty">The board could not be loaded.</li>';
+      document.getElementById('board-count').textContent = 'Unavailable';
+      document.getElementById('seat-note').textContent = '—';
+      document.getElementById('stat-players').textContent = '—';
+      document.getElementById('stat-average').textContent = '—';
+      document.getElementById('stat-top10').textContent = '—';
+      document.getElementById('stat-seats').textContent = '—';
+      board.innerHTML = `
+        <div class="board-message">
+          <div>
+            <strong>The player list didn’t load.</strong>
+            ${escapeHtml(message)}
+            <button type="button" id="retry-load">Reload the page</button>
+          </div>
+        </div>
+      `;
+      document.getElementById('retry-load').addEventListener('click', () => window.location.reload());
     }
 
     async function init() {
-      await fetchData();
-      if (!playersData || !snapshotsData) return;
-      
-      initPlayerSelect();
-      update();
-      
-      document.getElementById('player-select').addEventListener('change', update);
+      try {
+        await fetchData();
+        buildRanked();
+        renderMasthead();
+        renderHero();
+        renderBoard(searchInput.value);
+        renderDataNotice();
+
+        searchInput.addEventListener('input', event => renderBoard(event.target.value));
+        document.querySelector('.dialog-close').addEventListener('click', () => dialog.close());
+        dialog.addEventListener('click', event => {
+          if (event.target === dialog) dialog.close();
+        });
+        dialog.addEventListener('close', () => {
+          if (chartInstance) {
+            chartInstance.destroy();
+            chartInstance = null;
+          }
+        });
+
+        new ResizeObserver(applyBoardParity).observe(board);
+      } catch (error) {
+        console.error('Failed to load the leaderboard:', error);
+        renderFatalError(error.message || 'Check your connection and reload the page.');
+      }
     }
 
-    init().catch(console.error);
+    init();
   </script>
 </body>
 </html>
