@@ -54,6 +54,12 @@ export type RatingChange = {
 export type RankedPlayer = Player & {
   rank: number;
   rating: number | null;
+  /**
+   * Member handle for the active platform, or null when they have no account.
+   * Used for account resolution, gating, and secondary context only; the
+   * visible name is always `player.name`.
+   */
+  handle: string | null;
   platforms: Platform[];
   aliasText: string;
   snapshot: Snapshot | null;

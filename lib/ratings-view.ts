@@ -178,19 +178,40 @@ function targetDateFor(latestDate: string, range: RangeKey) {
   return subtractDays(latestDate, RANGE_DAYS[range]);
 }
 
-function ratingFromSnapshot(
+/**
+ * The rating entry that actually drives a member's rating on a platform.
+ *
+ * Matching is gated by account presence: a member with no handle on `platform`
+ * has no rating there, even when the snapshot file contains a same-platform
+ * entry for someone else. This is the single gate that keeps ratings from
+ * being borrowed across identities.
+ */
+function ratingEntryFromSnapshot(
   snapshot: Snapshot | null,
+  player: Player,
   platform: Platform,
   category: Category,
 ) {
+  const handle = handleFor(player, platform);
+  if (!handle) return null;
+
   return (
     snapshot?.ratings.find(
       (rating) =>
         rating.platform === platform &&
         rating.category === category &&
         typeof rating.rating === "number",
-    )?.rating ?? null
+    ) ?? null
   );
+}
+
+function ratingFromSnapshot(
+  snapshot: Snapshot | null,
+  player: Player,
+  platform: Platform,
+  category: Category,
+) {
+  return ratingEntryFromSnapshot(snapshot, player, platform, category)?.rating ?? null;
 }
 
 function aliasTextFor(player: Player) {
@@ -200,8 +221,23 @@ function aliasTextFor(player: Player) {
     .toLowerCase();
 }
 
-function accountFor(player: Player, platform: Platform) {
+/**
+ * The member's handle for a platform, or null when they have no account there.
+ */
+export function handleFor(player: Player, platform: Platform) {
   return (platform === "chess.com" ? player.chessCom : player.lichess) ?? null;
+}
+
+/**
+ * The name to show for a member, on every platform.
+ *
+ * The member alias is always the primary visible name: a dual-account member
+ * such as Wealth renders as "Wealth" on both Chess.com and Lichess, never as
+ * their platform handle. The per-platform handle stays available through
+ * `handleFor` for account resolution, gating, and secondary context.
+ */
+export function displayNameFor(player: Player, _platform: Platform) {
+  return player.name;
 }
 
 export function buildRatingsView(
@@ -231,16 +267,16 @@ export function buildRatingsView(
   const latestSnapshotFor = (playerId: string) =>
     latestDate ? snapshotAt(playerId, latestDate) : null;
 
-  const ratedHistory = (playerId: string): RatedSnapshot[] =>
-    getPlayerHistory(snapshots, playerId, platform, category).playerSnapshots.map(
-      (snapshot) => ({
-        date: snapshot.date,
-        rating: snapshot.ratings[0].rating as number,
-      }),
-    );
+  const ratedHistory = (player: Player): RatedSnapshot[] =>
+    getPlayerHistory(snapshots, player.id, platform, category, {
+      username: handleFor(player, platform),
+    }).playerSnapshots.map((snapshot) => ({
+      date: snapshot.date,
+      rating: snapshot.ratings[0].rating as number,
+    }));
 
   const changeFor = (
-    playerId: string,
+    player: Player,
     latestRating: number | null,
   ): RatingChange => {
     const latestChangeDate = latestDate || null;
@@ -254,7 +290,7 @@ export function buildRatingsView(
       };
     }
 
-    const history = ratedHistory(playerId);
+    const history = ratedHistory(player);
     let comparison: RatedSnapshot | null = null;
 
     if (range === "all") {
@@ -299,9 +335,7 @@ export function buildRatingsView(
   const ranked: RankedPlayer[] = players
     .map((player) => {
       const snapshot = latestSnapshotFor(player.id);
-      const rating = snapshot
-        ? ratingFromSnapshot(snapshot, platform, category)
-        : null;
+      const rating = ratingFromSnapshot(snapshot, player, platform, category);
       const platforms = snapshot
         ? [
             ...new Set(
@@ -316,10 +350,11 @@ export function buildRatingsView(
         ...player,
         snapshot,
         platforms,
+        handle: handleFor(player, platform),
         rating,
         aliasText: aliasTextFor(player),
         rank: 0,
-        change: changeFor(player.id, rating),
+        change: changeFor(player, rating),
       };
     })
     .sort((a, b) => {
@@ -353,7 +388,7 @@ export function buildRatingsView(
 
   const fieldSeries: ChartSeries[] = [];
   for (const player of players) {
-    const points = ratedHistory(player.id)
+    const points = ratedHistory(player)
       .filter((entry) => inRange(entry.date))
       .map((entry) => ({ date: entry.date, value: entry.rating }));
 
@@ -361,7 +396,7 @@ export function buildRatingsView(
 
     fieldSeries.push({
       playerId: player.id,
-      playerName: player.name,
+      playerName: displayNameFor(player, platform),
       points,
       latestValue: points[points.length - 1]?.value ?? null,
     });
@@ -393,7 +428,7 @@ export function buildRatingsView(
       },
     }));
 
-    const history = ratedHistory(player.id)
+    const history = ratedHistory(player)
       .filter((entry) => inRange(entry.date))
       .map((entry) => ({ date: entry.date, rating: entry.rating }));
 
@@ -408,7 +443,7 @@ export function buildRatingsView(
       activeCell: {
         platform,
         category,
-        username: accountFor(player, platform),
+        username: handleFor(player, platform),
         rating: ranking.rating,
         reason: cellReasonFor(
           player,
@@ -466,14 +501,17 @@ function cellReasonFor(
   snapshot: Snapshot | null,
   rating: number | null,
 ): ScorecardCellReason {
-  if (!accountFor(player, platform)) return "no-account";
+  if (!handleFor(player, platform)) return "no-account";
   if (platform === "chess.com" && category === "puzzle") {
     return "not-published";
   }
   if (!snapshot) return "no-data";
 
   const entry = snapshot.ratings.find(
-    (value) => value.platform === platform && value.category === category,
+    (value) =>
+      value.platform === platform &&
+      value.category === category &&
+      value.username === handleFor(player, platform),
   );
 
   if (!entry) return "no-data";
@@ -488,28 +526,21 @@ function buildCell(
   snapshot: Snapshot | null,
   view: ViewState,
 ): ScorecardCell {
-  const username = accountFor(player, platform);
+  const username = handleFor(player, platform);
+  const rating = ratingFromSnapshot(snapshot, player, platform, category);
   const reason = cellReasonFor(
     player,
     platform,
     category,
     snapshot,
-    snapshot
-      ? ratingFromSnapshot(snapshot, platform, category)
-      : null,
-  );
-  const entry = snapshot?.ratings.find(
-    (value) => value.platform === platform && value.category === category,
+    rating,
   );
 
   return {
     platform,
     category,
     username,
-    rating:
-      reason === "rated" && entry && typeof entry.rating === "number"
-        ? entry.rating
-        : null,
+    rating: reason === "rated" ? rating : null,
     reason,
     active: view.platform === platform && view.category === category,
   };
@@ -520,7 +551,7 @@ type FocusInput = {
   view: ViewState;
   rankedById: Map<string, RankedPlayer>;
   snapshotAt: (playerId: string, date: string) => Snapshot | null;
-  ratedHistory: (playerId: string) => RatedSnapshot[];
+  ratedHistory: (player: Player) => RatedSnapshot[];
   inRange: (date: string) => boolean;
 };
 
@@ -538,13 +569,14 @@ function buildFocus({
   const player = players.find((entry) => entry.id === focusId);
   if (!player) return null;
 
+  const displayName = displayNameFor(player, view.platform);
   const focusRanking = rankedById.get(focusId);
   const currentRating = focusRanking?.rating ?? null;
 
   if (currentRating == null) {
     return {
       playerId: player.id,
-      playerName: player.name,
+      playerName: displayName,
       missingRating: true,
       baselineDate: null,
       baselineRating: null,
@@ -562,14 +594,14 @@ function buildFocus({
     };
   }
 
-  const history = ratedHistory(player.id).filter((entry) =>
+  const history = ratedHistory(player).filter((entry) =>
     inRange(entry.date),
   );
   const baseline = history[0];
   if (!baseline) {
     return {
       playerId: player.id,
-      playerName: player.name,
+      playerName: displayName,
       missingRating: true,
       baselineDate: null,
       baselineRating: null,
@@ -593,7 +625,7 @@ function buildFocus({
   }));
   const focusSeries: ChartSeries = {
     playerId: player.id,
-    playerName: player.name,
+    playerName: displayName,
     points: focusPoints,
     latestValue: focusPoints[focusPoints.length - 1]?.value ?? null,
   };
@@ -603,7 +635,7 @@ function buildFocus({
     .map((entry) => {
       const snapshot = snapshotAt(entry.id, baseline.date);
       const rating = snapshot
-        ? ratingFromSnapshot(snapshot, view.platform, view.category)
+        ? ratingFromSnapshot(snapshot, entry, view.platform, view.category)
         : null;
       return { player: entry, rating };
     })
@@ -619,7 +651,9 @@ function buildFocus({
     .sort(
       (a, b) =>
         a.distance - b.distance ||
-        a.player.name.localeCompare(b.player.name) ||
+        displayNameFor(a.player, view.platform).localeCompare(
+          displayNameFor(b.player, view.platform),
+        ) ||
         a.player.id.localeCompare(b.player.id),
     )
     .slice(0, 8);
@@ -629,9 +663,10 @@ function buildFocus({
 
   for (const candidate of candidates) {
     const peerCurrent = rankedById.get(candidate.player.id)?.rating ?? null;
+    const peerDisplayName = displayNameFor(candidate.player, view.platform);
     const totalChange =
       peerCurrent == null ? null : peerCurrent - candidate.rating;
-    const points = ratedHistory(candidate.player.id)
+    const points = ratedHistory(candidate.player)
       .filter((entry) => entry.date >= baseline.date)
       .map((entry) => ({
         date: entry.date,
@@ -640,7 +675,7 @@ function buildFocus({
 
     peers.push({
       playerId: candidate.player.id,
-      playerName: candidate.player.name,
+      playerName: peerDisplayName,
       baselineRating: candidate.rating,
       currentRating: peerCurrent,
       totalChange,
@@ -650,7 +685,7 @@ function buildFocus({
     if (points.length) {
       peerSeries.push({
         playerId: candidate.player.id,
-        playerName: candidate.player.name,
+        playerName: peerDisplayName,
         points,
         latestValue: points[points.length - 1]?.value ?? null,
       });
@@ -696,7 +731,7 @@ function buildFocus({
 
   return {
     playerId: player.id,
-    playerName: player.name,
+    playerName: displayName,
     missingRating: false,
     baselineDate: baseline.date,
     baselineRating: baseline.rating,

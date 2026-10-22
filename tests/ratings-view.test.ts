@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { buildRatingsView, DEFAULT_VIEW_STATE } from "@/lib/ratings-view";
+import {
+  buildRatingsView,
+  DEFAULT_VIEW_STATE,
+  displayNameFor,
+  handleFor,
+} from "@/lib/ratings-view";
 import type {
   Category,
   ChessComExtras,
@@ -21,7 +26,10 @@ function player(
   name: string,
   handles: { chessCom?: string; lichess?: string } = {},
 ): Player {
-  return { id, name, ...handles };
+  // Default to a Chess.com handle equal to the id so fixtures mirror the real
+  // data model: a rated member always has a handle on the platform that drives
+  // the rating. Tests that need a no-account member pass explicit handles.
+  return { id, name, chessCom: id, ...handles };
 }
 
 function rating(
@@ -824,5 +832,192 @@ describe("scorecards", () => {
     expect(scorecard(sevenDayBlitz, "member").history).toEqual([
       { date: "2026-10-22", rating: 600 },
     ]);
+  });
+});
+
+describe("platform identity and account gating", () => {
+  it("returns the platform handle, or null when the member has no account", () => {
+    const duel = player("wealth98981", "Wealth98981", {
+      chessCom: "wealth98981",
+      lichess: "Wealth999",
+    });
+    const chessComOnly = player("only", "Only", { chessCom: "only-handle" });
+
+    expect(handleFor(duel, "chess.com")).toBe("wealth98981");
+    expect(handleFor(duel, "lichess")).toBe("Wealth999");
+    expect(handleFor(chessComOnly, "lichess")).toBeNull();
+  });
+
+  it("shows the member alias on every platform for a dual-account member", () => {
+    const duel = player("wealth", "Wealth", {
+      chessCom: "wealth98981",
+      lichess: "Wealth999",
+    });
+
+    expect(displayNameFor(duel, "chess.com")).toBe("Wealth");
+    expect(displayNameFor(duel, "lichess")).toBe("Wealth");
+  });
+
+  it("falls back to the member name when the active platform has no account", () => {
+    const chessComOnly = player("only", "Only", { chessCom: "only-handle" });
+
+    // No Lichess account: keep the member name so the tile stays identifiable,
+    // but the rating must be null and the cell stays no-account.
+    expect(displayNameFor(chessComOnly, "lichess")).toBe("Only");
+  });
+
+  it("exposes handle on the ranked player while keeping the alias as the name", () => {
+    const duel = player("wealth", "Wealth", {
+      chessCom: "wealth98981",
+      lichess: "Wealth999",
+    });
+    const snapshots = [
+      snapshot(duel, "2026-10-22", [
+        rating("chess.com", "rapid", 1300),
+        rating("lichess", "rapid", 1500),
+      ]),
+    ];
+
+    const chessCom = buildRatingsView(
+      [duel],
+      snapshots,
+      view({ platform: "chess.com", category: "rapid" }),
+    );
+    expect(findPlayer(chessCom, "wealth")).toMatchObject({
+      handle: "wealth98981",
+      name: "Wealth",
+      rating: 1300,
+    });
+
+    const lichess = buildRatingsView(
+      [duel],
+      snapshots,
+      view({ platform: "lichess", category: "rapid" }),
+    );
+    expect(findPlayer(lichess, "wealth")).toMatchObject({
+      handle: "Wealth999",
+      name: "Wealth",
+      rating: 1500,
+    });
+  });
+
+  it("gives a Chess.com-only member a null Lichess rating and no-account cells", () => {
+    const chessComOnly = player("only", "Only", { chessCom: "only-handle" });
+    const snapshots = [
+      // The snapshot even contains a stray Lichess entry, which must never be
+      // attributed to a member with no Lichess account.
+      snapshot(chessComOnly, "2026-10-22", [
+        rating("chess.com", "rapid", 1100),
+        rating("lichess", "rapid", 1999),
+      ]),
+    ];
+
+    const model = buildRatingsView(
+      [chessComOnly],
+      snapshots,
+      view({ platform: "lichess", category: "rapid", range: "all" }),
+    );
+
+    expect(findPlayer(model, "only")?.rating).toBeNull();
+    expect(model.ratedCount).toBe(0);
+    expect(model.leader).toBeNull();
+    expect(model.average).toBeNull();
+    expect(scorecard(model, "only").currentRating).toBeNull();
+    expect(scorecard(model, "only").history).toEqual([]);
+    expect(scorecard(model, "only").activeCell).toMatchObject({
+      platform: "lichess",
+      username: null,
+      rating: null,
+      reason: "no-account",
+    });
+    expect(matrixRow(model, "only", "rapid").cells.lichess).toMatchObject({
+      username: null,
+      rating: null,
+      reason: "no-account",
+    });
+  });
+
+  it("excludes members without an account on the active platform from focus peers", () => {
+    const focus = player("focus", "Focus", { chessCom: "focus-handle" });
+    const peer = player("peer", "Peer", { chessCom: "peer-handle" });
+    // Rated on Lichess in the data, but has no Lichess account: must not count.
+    const impostor = player("impostor", "Impostor", { chessCom: "impostor-handle" });
+    const snapshots = [
+      snapshot(focus, "2026-10-22", [
+        rating("chess.com", "rapid", null),
+        rating("lichess", "rapid", 1500),
+      ]),
+      snapshot(peer, "2026-10-22", [
+        rating("chess.com", "rapid", null),
+        rating("lichess", "rapid", 1480),
+      ]),
+      snapshot(impostor, "2026-10-22", [
+        rating("chess.com", "rapid", null),
+        rating("lichess", "rapid", 1510),
+      ]),
+    ];
+
+    const model = buildRatingsView(
+      [focus, peer, impostor],
+      snapshots,
+      view({ platform: "lichess", category: "rapid", focusPlayerId: "focus" }),
+    );
+
+    // None of the members have a Lichess account, so nobody is rated and the
+    // focus view reports the missing-rating state without peers.
+    expect(model.ratedCount).toBe(0);
+    expect(model.focus).toMatchObject({
+      missingRating: true,
+      peers: [],
+      groupSize: 1,
+    });
+  });
+
+  it("keeps Lichess focus peers for members who do have a Lichess account", () => {
+    const focus = player("focus", "Focus", { lichess: "focus-lichess" });
+    const peer = player("peer", "Peer", { lichess: "peer-lichess" });
+    const chessComOnly = player("chesscom-only", "Chess.com Only", {
+      chessCom: "chesscom-only-handle",
+    });
+    const snapshots = [
+      snapshot(focus, "2026-10-22", [rating("lichess", "rapid", 1500)]),
+      snapshot(peer, "2026-10-22", [rating("lichess", "rapid", 1470)]),
+      snapshot(chessComOnly, "2026-10-22", [
+        rating("chess.com", "rapid", 1500),
+        rating("lichess", "rapid", 1505),
+      ]),
+    ];
+
+    const model = buildRatingsView(
+      [focus, peer, chessComOnly],
+      snapshots,
+      view({ platform: "lichess", category: "rapid", focusPlayerId: "focus" }),
+    );
+
+    expect(model.focus?.missingRating).toBe(false);
+    expect(model.focus?.peers.map((entry) => entry.playerId)).toEqual(["peer"]);
+    expect(model.focus?.peers.some((entry) => entry.playerId === "chesscom-only")).toBe(
+      false,
+    );
+  });
+
+  it("keeps search working across the member name and both handles", () => {
+    const duel = player("wealth98981", "Wealth98981", {
+      chessCom: "wealth98981",
+      lichess: "Wealth999",
+    });
+    const snapshots = [
+      snapshot(duel, "2026-10-22", [rating("lichess", "rapid", 1500)]),
+    ];
+
+    const model = buildRatingsView(
+      [duel],
+      snapshots,
+      view({ platform: "lichess", category: "rapid" }),
+    );
+
+    const aliases = findPlayer(model, "wealth98981")?.aliasText ?? "";
+    expect(aliases).toContain("wealth98981");
+    expect(aliases).toContain("wealth999");
   });
 });

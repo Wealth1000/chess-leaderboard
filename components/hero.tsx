@@ -32,7 +32,9 @@ export default function Hero({ model, loading, warning }: HeroProps) {
           ? `${formatNumber(gap)} points clear of #2`
           : "level with #2"
         : "first rating on the board";
-      meta = `${platformName} ${categoryName} · ${gapText}`;
+      const identityText =
+        leader.handle ? ` · ${leader.handle} on ${platformName}` : "";
+      meta = `${platformName} ${categoryName} · ${gapText}${identityText}`;
     }
   }
 
@@ -74,7 +76,14 @@ export default function Hero({ model, loading, warning }: HeroProps) {
             rated.slice(1, 6).map((player) => (
               <li className={styles.chaseRow} key={player.id}>
                 <span className={styles.chaseRank}>{padRank(player.rank)}</span>
-                <span className={styles.chaseName} title={player.name}>
+                <span
+                  className={styles.chaseName}
+                  title={
+                    player.handle
+                      ? `${player.name} · ${platformName} ${player.handle}`
+                      : `${player.name} · no ${platformName} account`
+                  }
+                >
                   {player.name}
                 </span>
                 <span className={styles.chaseScore}>

@@ -188,7 +188,14 @@ export default function ClubBoard({
                       {player.rating == null ? "Unrated" : categoryName}
                     </span>
                   </span>
-                  <span className={styles.tileName} title={player.name}>
+                  <span
+                    className={styles.tileName}
+                    title={
+                      player.handle
+                        ? `${player.name} · ${platformName} ${player.handle}`
+                        : `${player.name} · no ${platformName} account`
+                    }
+                  >
                     {player.name}
                   </span>
                   <span className={styles.tileBottom}>

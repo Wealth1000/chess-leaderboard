@@ -492,10 +492,14 @@ export default function FieldChart({
                       aria-pressed={focus?.playerId === player.id}
                       onClick={() => choosePlayer(player.id)}
                     >
-                      <span className={styles.pickerName}>{player.name}</span>
+                      <span className={styles.pickerName}>
+                        {player.name}
+                      </span>
                       <span className={styles.pickerMeta}>
                         {player.rating == null
-                          ? "Unrated in this view"
+                          ? player.handle
+                            ? "Unrated in this view"
+                            : `No ${platformName} account`
                           : `${formatNumber(player.rating)} · #${player.rank}`}
                       </span>
                     </button>
