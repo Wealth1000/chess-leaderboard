@@ -2,9 +2,14 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const DATA_DIR = path.join(__dirname, '../data');
-const SNAPSHOTS_FILE = path.join(DATA_DIR, 'snapshots.json');
-const PLAYERS_FILE = path.join(DATA_DIR, 'players.json');
+const GIST_ID = process.env.GIST_ID;
+const GIST_TOKEN = process.env.GIST_TOKEN;
+const PLAYERS_FILE = path.join(__dirname, '../data/players.json');
+
+if (!GIST_ID || !GIST_TOKEN) {
+  console.error('Missing GIST_ID or GIST_TOKEN environment variables');
+  process.exit(1);
+}
 
 function fetchChessComRating(username) {
   return new Promise((resolve) => {
@@ -21,7 +26,6 @@ function fetchChessComRating(username) {
       res.on('end', () => {
         try {
           const json = JSON.parse(data);
-          // Priority: blitz > rapid > bullet > daily
           const rating = json.chess_blitz?.last?.rating ||
                         json.chess_rapid?.last?.rating ||
                         json.chess_bullet?.last?.rating ||
@@ -52,7 +56,6 @@ function fetchLichessRating(username) {
       res.on('end', () => {
         try {
           const json = JSON.parse(data);
-          // Priority: blitz > rapid > classical > bullet
           const rating = json.perfs?.blitz?.rating ||
                         json.perfs?.rapid?.rating ||
                         json.perfs?.classical?.rating ||
@@ -69,18 +72,70 @@ function fetchLichessRating(username) {
   });
 }
 
+function updateGist(snapshots) {
+  return new Promise((resolve, reject) => {
+    const data = JSON.stringify({ files: { 'snapshots.json': { content: JSON.stringify(snapshots, null, 2) } } });
+    
+    const options = {
+      hostname: 'api.github.com',
+      path: `/gists/${GIST_ID}`,
+      method: 'PATCH',
+      headers: {
+        'Authorization': `token ${GIST_TOKEN}`,
+        'User-Agent': 'ChessLeaderboard/1.0',
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(data)
+      }
+    };
+
+    const req = https.request(options, (res) => {
+      let body = '';
+      res.on('data', chunk => body += chunk);
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          console.log('✅ Gist updated successfully');
+          resolve();
+        } else {
+          console.error(`Failed to update gist: ${res.statusCode}`);
+          console.error(body);
+          reject(new Error(body));
+        }
+      });
+    });
+
+    req.on('error', reject);
+    req.write(data);
+    req.end();
+  });
+}
+
 async function main() {
   console.log('🔄 Fetching chess ratings...\n');
   
   const players = JSON.parse(fs.readFileSync(PLAYERS_FILE, 'utf8'));
   const today = new Date().toISOString().split('T')[0];
 
-  // Load existing snapshots or start fresh
-  let snapshots;
+  // Fetch current gist data
+  let snapshots = { snapshots: [] };
   try {
-    snapshots = JSON.parse(fs.readFileSync(SNAPSHOTS_FILE, 'utf8'));
-  } catch {
-    snapshots = { snapshots: [] };
+    const gistRes = await new Promise((resolve, reject) => {
+      https.get({
+        hostname: 'api.github.com',
+        path: `/gists/${GIST_ID}`,
+        headers: { 'User-Agent': 'ChessLeaderboard/1.0' }
+      }, (res) => {
+        let data = '';
+        res.on('data', chunk => data += chunk);
+        res.on('end', () => resolve(JSON.parse(data)));
+      }).on('error', reject);
+    });
+    
+    const snapshotFile = gistRes.files?.['snapshots.json'];
+    if (snapshotFile) {
+      snapshots = JSON.parse(snapshotFile.content);
+    }
+  } catch (e) {
+    console.log('No existing gist data, starting fresh');
   }
 
   // Skip if already fetched today
@@ -98,13 +153,13 @@ async function main() {
     if (player.chessCom) {
       const result = await fetchChessComRating(player.chessCom.toLowerCase());
       ratings.push(result);
-      console.log(`  chess.com: ${result.rating || 'no rating'}`);
+      console.log(`  chess.com: ${result.rating ?? 'N/A'}`);
     }
 
     if (player.lichess) {
       const result = await fetchLichessRating(player.lichess);
       ratings.push(result);
-      console.log(`  lichess: ${result.rating || 'no rating'}`);
+      console.log(`  lichess: ${result.rating ?? 'N/A'}`);
     }
 
     newSnapshots.push({
@@ -114,15 +169,15 @@ async function main() {
       ratings
     });
 
-    // Be nice to APIs — small delay between requests
     await new Promise(r => setTimeout(r, 200));
   }
 
   snapshots.snapshots.push(...newSnapshots);
-  fs.writeFileSync(SNAPSHOTS_FILE, JSON.stringify(snapshots, null, 2));
   
   console.log(`\n✅ Added ${newSnapshots.length} snapshots for ${today}`);
   console.log(`📊 Total snapshots: ${snapshots.snapshots.length}`);
+  
+  await updateGist(snapshots);
 }
 
 main().catch(console.error);

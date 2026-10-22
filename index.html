@@ -18,28 +18,11 @@
       margin: 0 auto;
       padding: 2rem;
     }
-    header {
-      margin-bottom: 2rem;
-    }
-    h1 {
-      font-size: 2.5rem;
-      font-weight: 700;
-      color: #111827;
-    }
-    .subtitle {
-      color: #6b7280;
-      margin-top: 0.5rem;
-    }
-    .controls {
-      margin-bottom: 1.5rem;
-    }
-    label {
-      display: block;
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: #374151;
-      margin-bottom: 0.5rem;
-    }
+    header { margin-bottom: 2rem; }
+    h1 { font-size: 2.5rem; font-weight: 700; color: #111827; }
+    .subtitle { color: #6b7280; margin-top: 0.5rem; }
+    .controls { margin-bottom: 1.5rem; }
+    label { display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem; }
     select {
       padding: 0.5rem 1rem;
       border: 1px solid #d1d5db;
@@ -48,64 +31,24 @@
       background: white;
       max-width: 250px;
     }
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1.5rem;
-      margin-bottom: 1.5rem;
-    }
-    @media (max-width: 900px) {
-      .grid { grid-template-columns: 1fr; }
-    }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
     .card {
       background: white;
       border-radius: 0.75rem;
       padding: 1.5rem;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
-    .card h2 {
-      font-size: 1.25rem;
-      font-weight: 600;
-      margin-bottom: 1rem;
-      color: #111827;
-    }
-    .card .meta {
-      font-size: 0.875rem;
-      color: #6b7280;
-      margin-bottom: 1rem;
-    }
-    .chart-container {
-      position: relative;
-      height: 300px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    th, td {
-      padding: 0.75rem;
-      text-align: left;
-      border-bottom: 1px solid #e5e7eb;
-    }
-    th {
-      font-weight: 600;
-      color: #374151;
-      font-size: 0.875rem;
-    }
-    td {
-      font-size: 0.9375rem;
-    }
-    tr:hover {
-      background: #f9fafb;
-    }
-    .rating {
-      font-weight: 700;
-      color: #111827;
-    }
-    .platforms {
-      font-size: 0.8125rem;
-      color: #6b7280;
-    }
+    .card h2 { font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; color: #111827; }
+    .card .meta { font-size: 0.875rem; color: #6b7280; margin-bottom: 1rem; }
+    .chart-container { position: relative; height: 300px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    th { font-weight: 600; color: #374151; font-size: 0.875rem; }
+    td { font-size: 0.9375rem; }
+    tr:hover { background: #f9fafb; }
+    .rating { font-weight: 700; color: #111827; }
+    .platforms { font-size: 0.8125rem; color: #6b7280; }
     .bar-chart {
       display: flex;
       align-items: flex-end;
@@ -114,12 +57,7 @@
       padding: 1rem 0;
       gap: 0.5rem;
     }
-    .bar-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      flex: 1;
-    }
+    .bar-item { display: flex; flex-direction: column; align-items: center; flex: 1; }
     .bar {
       width: 100%;
       max-width: 80px;
@@ -128,24 +66,11 @@
       min-height: 4px;
       transition: height 0.3s ease;
     }
-    .bar-value {
-      font-weight: 700;
-      font-size: 0.875rem;
-      margin-bottom: 0.5rem;
-      color: #374151;
-    }
-    .bar-label {
-      font-size: 0.8125rem;
-      color: #6b7280;
-      margin-top: 0.5rem;
-      text-align: center;
-    }
-    .empty {
-      color: #9ca3af;
-      font-style: italic;
-      padding: 2rem;
-      text-align: center;
-    }
+    .bar-value { font-weight: 700; font-size: 0.875rem; margin-bottom: 0.5rem; color: #374151; }
+    .bar-label { font-size: 0.8125rem; color: #6b7280; margin-top: 0.5rem; text-align: center; }
+    .empty { color: #9ca3af; font-style: italic; padding: 2rem; text-align: center; }
+    .loading { color: #6b7280; text-align: center; padding: 2rem; }
+    .error { color: #dc2626; text-align: center; padding: 2rem; }
   </style>
 </head>
 <body>
@@ -157,14 +82,14 @@
 
     <div class="controls">
       <label for="player-select">Select Player</label>
-      <select id="player-select"></select>
+      <select id="player-select"><option value="">Loading...</option></select>
     </div>
 
     <div class="grid">
       <div class="card">
         <h2 id="chart-title">Rating History</h2>
-        <div class="chart-container">
-          <canvas id="lineChart"></canvas>
+        <div class="chart-container" id="chart-wrapper">
+          <div class="loading">Loading data...</div>
         </div>
       </div>
 
@@ -180,70 +105,88 @@
               <th>Platforms</th>
             </tr>
           </thead>
-          <tbody id="leaderboard-body"></tbody>
+          <tbody id="leaderboard-body">
+            <tr><td colspan="4" class="loading">Loading...</td></tr>
+          </tbody>
         </table>
       </div>
     </div>
 
     <div class="card">
       <h2>Group Comparison</h2>
-      <div class="bar-chart" id="bar-chart"></div>
+      <div class="bar-chart" id="bar-chart">
+        <div class="loading">Loading...</div>
+      </div>
     </div>
   </div>
 
   <script>
+    const GIST_ID = '09a15769417c043227d6dc0019182545';
     const COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8'];
+    
+    let playersData = null;
+    let snapshotsData = null;
 
     async function fetchData() {
-      const [snapshotsRes, playersRes] = await Promise.all([
-        fetch('/data/snapshots.json'),
-        fetch('/data/players.json')
-      ]);
-      return {
-        snapshots: await snapshotsRes.json(),
-        players: await playersRes.json()
-      };
+      try {
+        // Fetch players config from repo
+        const playersRes = await fetch('/data/players.json');
+        playersData = await playersRes.json();
+        
+        // Fetch snapshots from gist
+        const gistRes = await fetch(`https://gist.githubusercontent.com/Wealth1000/${GIST_ID}/raw/snapshots.json`);
+        if (gistRes.ok) {
+          snapshotsData = await gistRes.json();
+        } else {
+          snapshotsData = { snapshots: [] };
+        }
+      } catch (e) {
+        console.error('Failed to fetch data:', e);
+        document.getElementById('chart-wrapper').innerHTML = '<div class="error">Failed to load data. Please refresh.</div>';
+      }
     }
 
     function getRating(snapshot) {
       const lichess = snapshot.ratings.find(r => r.platform === 'lichess');
       const chessCom = snapshot.ratings.find(r => r.platform === 'chess.com');
-      return lichess?.rating || chessCom?.rating || null;
+      return lichess?.rating ?? chessCom?.rating ?? null;
     }
 
-    function initPlayerSelect(players, container) {
-      container.innerHTML = '';
-      players.players.forEach(p => {
+    function initPlayerSelect() {
+      const select = document.getElementById('player-select');
+      select.innerHTML = '';
+      playersData.players.forEach(p => {
         const opt = document.createElement('option');
         opt.value = p.id;
         opt.textContent = p.name;
-        container.appendChild(opt);
+        select.appendChild(opt);
       });
+      if (playersData.players.length > 0) {
+        select.value = playersData.players[0].id;
+      }
     }
 
-    function renderLineChart(snapshots, playerId, playerName) {
-      const ctx = document.getElementById('lineChart').getContext('2d');
+    function renderLineChart(playerId, playerName) {
+      const wrapper = document.getElementById('chart-wrapper');
+      wrapper.innerHTML = '<canvas id="lineChart"></canvas>';
       
-      // Destroy existing chart
-      if (window.lineChartInstance) {
-        window.lineChartInstance.destroy();
-      }
-
-      const playerSnapshots = snapshots.snapshots.filter(s => s.playerId === playerId);
+      const playerSnapshots = snapshotsData.snapshots.filter(s => s.playerId === playerId);
       document.getElementById('chart-title').textContent = `${playerName} - Rating History`;
 
       if (playerSnapshots.length === 0) {
-        ctx.canvas.parentElement.innerHTML = '<p class="empty">No data yet</p>';
+        wrapper.innerHTML = '<div class="empty">No data yet</div>';
         return;
       }
 
+      const ctx = document.getElementById('lineChart').getContext('2d');
       const platforms = [...new Set(playerSnapshots.flatMap(s => s.ratings.map(r => r.platform)))];
       const dates = [...new Set(playerSnapshots.map(s => s.date))].sort();
 
       const datasets = platforms.map((platform, i) => {
         const data = dates.map(date => {
           const snap = playerSnapshots.find(s => s.date === date);
-          return snap?.ratings.find(r => r.platform === platform)?.rating || null;
+          const rating = snap?.ratings.find(r => r.platform === platform)?.rating;
+          return rating ?? null;
         });
         return {
           label: platform,
@@ -255,15 +198,13 @@
         };
       });
 
-      window.lineChartInstance = new Chart(ctx, {
+      new Chart(ctx, {
         type: 'line',
         data: { labels: dates, datasets },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: {
-            legend: { position: 'top' },
-          },
+          plugins: { legend: { position: 'top' } },
           scales: {
             y: { beginAtZero: false, title: { display: true, text: 'Rating' } },
             x: { ticks: { maxTicksLimit: 10 } },
@@ -272,8 +213,8 @@
       });
     }
 
-    function renderLeaderboard(snapshots) {
-      const dates = [...new Set(snapshots.snapshots.map(s => s.date))].sort();
+    function renderLeaderboard() {
+      const dates = [...new Set(snapshotsData.snapshots.map(s => s.date))].sort();
       const latestDate = dates[dates.length - 1];
       document.getElementById('latest-date').textContent = `Latest: ${latestDate || 'No data'}`;
 
@@ -285,10 +226,10 @@
         return;
       }
 
-      const latest = snapshots.snapshots
+      const latest = snapshotsData.snapshots
         .filter(s => s.date === latestDate)
         .map(s => ({ ...s, rating: getRating(s) }))
-        .sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
 
       latest.forEach((player, index) => {
         const row = document.createElement('tr');
@@ -302,27 +243,28 @@
       });
     }
 
-    function renderBarChart(snapshots) {
+    function renderBarChart() {
       const container = document.getElementById('bar-chart');
-      const dates = [...new Set(snapshots.snapshots.map(s => s.date))].sort();
+      const dates = [...new Set(snapshotsData.snapshots.map(s => s.date))].sort();
       const latestDate = dates[dates.length - 1];
 
       if (!latestDate) {
-        container.innerHTML = '<p class="empty">No data yet</p>';
+        container.innerHTML = '<div class="empty">No data yet</div>';
         return;
       }
 
-      const latest = snapshots.snapshots.filter(s => s.date === latestDate);
-      const ratings = latest.map(s => getRating(s) || 0);
-      const maxRating = Math.max(...ratings, 1);
+      const latest = snapshotsData.snapshots.filter(s => s.date === latestDate);
+      const ratings = latest.map(s => getRating(s) ?? 0);
+      const maxRating = Math.max(...ratings.filter(r => r > 0), 1);
 
       container.innerHTML = '';
       latest.forEach((player, i) => {
-        const height = (ratings[i] / maxRating) * 100;
+        const rating = ratings[i];
+        const height = rating > 0 ? (rating / maxRating) * 100 : 4;
         const item = document.createElement('div');
         item.className = 'bar-item';
         item.innerHTML = `
-          <div class="bar-value">${ratings[i] || '-'}</div>
+          <div class="bar-value">${rating || 'N/A'}</div>
           <div class="bar" style="height: ${height}%; background: ${COLORS[i % COLORS.length]}"></div>
           <div class="bar-label">${player.playerName}</div>
         `;
@@ -330,26 +272,27 @@
       });
     }
 
-    async function init() {
-      const data = await fetchData();
-      const select = document.getElementById('player-select');
-      initPlayerSelect(data.players, select);
-
-      function update() {
-        const selected = select.value;
-        const player = data.players.players.find(p => p.id === selected);
-        if (player) {
-          renderLineChart(data.snapshots, selected, player.name);
-        }
-        renderLeaderboard(data.snapshots);
-        renderBarChart(data.snapshots);
+    function update() {
+      const selected = document.getElementById('player-select').value;
+      const player = playersData.players.find(p => p.id === selected);
+      if (player) {
+        renderLineChart(selected, player.name);
       }
-
-      select.addEventListener('change', update);
-      update();
+      renderLeaderboard();
+      renderBarChart();
     }
 
-    init();
+    async function init() {
+      await fetchData();
+      if (!playersData || !snapshotsData) return;
+      
+      initPlayerSelect();
+      update();
+      
+      document.getElementById('player-select').addEventListener('change', update);
+    }
+
+    init().catch(console.error);
   </script>
 </body>
 </html>
