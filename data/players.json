@@ -1,0 +1,10 @@
+{
+  "players": [
+    {
+      "id": "player1",
+      "name": "Your Name",
+      "chessCom": "your-chesscom-username",
+      "lichess": "your-lichess-username"
+    }
+  ]
+}
