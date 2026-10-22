@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useRef } from "react";
-import { formatDate, formatNumber, padRank } from "@/lib/format";
+import { formatDate, formatNumber, padRank, platformLabel } from "@/lib/format";
 import { getPlayerHistory } from "@/lib/history";
-import type { RankedPlayer, Snapshot } from "@/lib/types";
+import type { Platform, RankedPlayer, Snapshot } from "@/lib/types";
 import RatingChart from "./rating-chart";
 import styles from "./player-dialog.module.css";
 
@@ -13,6 +13,7 @@ type PlayerDialogProps = {
   latestDate: string;
   leader: RankedPlayer | null;
   playerCount: number;
+  platform: Platform;
   onClose: () => void;
 };
 
@@ -22,12 +23,15 @@ export default function PlayerDialog({
   latestDate,
   leader,
   playerCount,
+  platform,
   onClose,
 }: PlayerDialogProps) {
+  const platformName = platformLabel(platform);
+  const handle = platform === "chess.com" ? player.chessCom : player.lichess;
   const dialogRef = useRef<HTMLDialogElement>(null);
   const { dates } = useMemo(
-    () => getPlayerHistory(snapshots, player.id),
-    [player.id, snapshots],
+    () => getPlayerHistory(snapshots, player.id, platform),
+    [player.id, platform, snapshots],
   );
 
   useEffect(() => {
@@ -55,8 +59,8 @@ export default function PlayerDialog({
     dates.length >= 2
       ? `${dates.length} snapshots`
       : dates.length === 1
-        ? "First snapshot"
-        : "No snapshots yet";
+        ? "1 snapshot"
+        : "No history yet";
 
   return (
     <dialog
@@ -69,7 +73,7 @@ export default function PlayerDialog({
     >
       <div className={styles.scorecard}>
         <div className={styles.scorecardBar}>
-          <span>Player scorecard</span>
+          <span>Player scorecard · {platformName}</span>
           <button
             type="button"
             className={styles.dialogClose}
@@ -90,9 +94,7 @@ export default function PlayerDialog({
                 {player.name}
               </h2>
               <p className={styles.scorecardPlatform}>
-                {player.platforms.length
-                  ? player.platforms.join(" · ")
-                  : "No platform data"}
+                {handle ? `${platformName} · ${handle}` : `No ${platformName} account`}
               </p>
             </div>
             <div className={styles.scorecardRating}>
@@ -103,10 +105,14 @@ export default function PlayerDialog({
 
           <div className={styles.chartBlock}>
             <div className={styles.chartTitleRow}>
-              <h3>Rating history</h3>
+              <h3>{platformName} history</h3>
               <span>{historyNote}</span>
             </div>
-            <RatingChart player={player} snapshots={snapshots} />
+            <RatingChart
+              player={player}
+              snapshots={snapshots}
+              platform={platform}
+            />
           </div>
 
           <dl className={styles.scorecardStats}>

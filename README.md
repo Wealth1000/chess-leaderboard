@@ -11,7 +11,10 @@ chess.com and Lichess profiles, then ranked on a club chessboard.
   `data/players.json`
 - **Fresh ratings**: The browser fetches the latest snapshots from a GitHub Gist,
   so a new rating update appears without rebuilding the site
-- **Charts**: Chart.js is loaded on demand when a player scorecard opens
+- **Charts**: Chart.js is loaded on demand for the player scorecard history and
+  the composite all-player field chart
+- **Platforms**: The masthead switch re-ranks the whole site, including the hero,
+  board, scorecards, and charts, using either Chess.com or Lichess ratings
 - **Hosting**: GitHub Pages, deployed by the workflow in `.github/workflows/deploy.yml`
 
 ## Project layout
@@ -68,8 +71,8 @@ locally, run the command above, then serve `out/` under `/chess-leaderboard/`.
    `scripts/fetch-ratings.js` every day at 09:00 UTC and writes the results to a
    GitHub Gist.
 3. **Live ratings**: On page load, `hooks/use-snapshots.ts` fetches the gist and
-   `lib/leaderboard.ts` ranks the latest snapshot. A failed fetch leaves the
-   player list usable and shows a data warning.
+   `lib/leaderboard.ts` ranks the latest snapshot for the selected platform. A
+   failed fetch leaves the player list usable and shows a data warning.
 
 ## Adding players
 

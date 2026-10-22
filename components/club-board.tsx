@@ -3,13 +3,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { formatNumber, padRank, platformLabel } from "@/lib/format";
 import { BOARD_SQUARES, getSeatInfo } from "@/lib/leaderboard";
-import type { RankedPlayer } from "@/lib/types";
+import type { Platform, RankedPlayer } from "@/lib/types";
 import styles from "./board.module.css";
 
 type ClubBoardProps = {
   ranked: RankedPlayer[];
   loading: boolean;
   warning: boolean;
+  platform: Platform;
   onSelect: (player: RankedPlayer) => void;
 };
 
@@ -23,8 +24,10 @@ export default function ClubBoard({
   ranked,
   loading,
   warning,
+  platform,
   onSelect,
 }: ClubBoardProps) {
+  const platformName = platformLabel(platform);
   const [query, setQuery] = useState("");
   const boardRef = useRef<HTMLDivElement>(null);
 
@@ -40,6 +43,7 @@ export default function ClubBoard({
 
   const seats = getSeatInfo(ranked.length);
   const hasSnapshots = ranked.some((player) => player.snapshot);
+  const ratedCount = ranked.filter((player) => player.rating != null).length;
 
   const applyParity = useCallback(() => {
     const board = boardRef.current;
@@ -79,6 +83,9 @@ export default function ClubBoard({
   let countLabel = `${ranked.length} players`;
   if (loading) countLabel = "Loading…";
   else if (filtering) countLabel = `${visiblePlayers.length} of ${ranked.length}`;
+  else if (ratedCount < ranked.length) {
+    countLabel = `${ratedCount} rated of ${ranked.length}`;
+  }
 
   let notice: string | null = null;
   if (!loading) {
@@ -88,6 +95,8 @@ export default function ClubBoard({
     } else if (!hasSnapshots) {
       notice =
         "No snapshots yet. The board will rank players after the next daily update.";
+    } else if (!ratedCount) {
+      notice = `No ${platformName} ratings in the latest snapshot. Switch platform or check back after the next update.`;
     }
   }
 
@@ -95,7 +104,7 @@ export default function ClubBoard({
     <section className={styles.boardSection} aria-labelledby="board-heading">
       <div className={styles.sectionHead}>
         <div>
-          <p className="eyebrow eyebrowLight">The club board</p>
+          <p className="eyebrow eyebrowLight">The club board · {platformName}</p>
           <h2 id="board-heading">Every player, ranked.</h2>
         </div>
         <div className={styles.boardTools}>
@@ -135,7 +144,7 @@ export default function ClubBoard({
                 initialTileClass(index),
                 player.rank === 1
                   ? styles.tileLeader
-                  : player.rank <= 3
+                  : player.rating != null && player.rank <= 3
                     ? styles.tilePodium
                     : "",
               ]
@@ -147,17 +156,21 @@ export default function ClubBoard({
                   type="button"
                   className={className}
                   key={player.id}
-                  aria-label={`Number ${player.rank}: ${player.name}, ${
+                  aria-label={
                     player.rating == null
-                      ? "unrated"
-                      : `${player.rating} rating`
-                  }. Open scorecard.`}
+                      ? `${player.name}, unrated on ${platformName}. Open scorecard.`
+                      : `Number ${player.rank}: ${player.name}, ${player.rating} ${platformName} rating. Open scorecard.`
+                  }
                   onClick={() => onSelect(player)}
                 >
                   <span className={styles.tileTop}>
-                    <span className={styles.tileRank}>{padRank(player.rank)}</span>
+                    <span className={styles.tileRank}>
+                      {player.rating == null ? "—" : padRank(player.rank)}
+                    </span>
                     <span className={styles.tilePlatform}>
-                      {platformLabel(player.platforms)}
+                      {player.rating == null
+                        ? "Unrated"
+                        : platformLabel(platform)}
                     </span>
                   </span>
                   <span className={styles.tileName} title={player.name}>

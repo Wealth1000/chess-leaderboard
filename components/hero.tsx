@@ -1,6 +1,6 @@
-import { formatNumber, padRank } from "@/lib/format";
+import { formatNumber, padRank, platformLabel } from "@/lib/format";
 import { getSeatInfo } from "@/lib/leaderboard";
-import type { RankedPlayer } from "@/lib/types";
+import type { Platform, RankedPlayer } from "@/lib/types";
 import styles from "./hero.module.css";
 
 type HeroProps = {
@@ -8,9 +8,17 @@ type HeroProps = {
   playerCount: number;
   loading: boolean;
   warning: boolean;
+  platform: Platform;
 };
 
-export default function Hero({ ranked, playerCount, loading, warning }: HeroProps) {
+export default function Hero({
+  ranked,
+  playerCount,
+  loading,
+  warning,
+  platform,
+}: HeroProps) {
+  const platformName = platformLabel(platform);
   const ratedPlayers = ranked.filter((player) => player.rating != null);
   const leader = ratedPlayers[0] ?? null;
   const leaderRating = leader?.rating ?? null;
@@ -31,26 +39,24 @@ export default function Hero({ ranked, playerCount, loading, warning }: HeroProp
     if (!leader) {
       meta = warning
         ? "Ratings did not load. Reload the page to try again."
-        : "The first daily snapshot will fill the board.";
+        : `No ${platformName} ratings in the latest snapshot.`;
     } else {
       const gap = ratedPlayers[1]
         ? (leaderRating ?? 0) - (ratedPlayers[1].rating ?? 0)
         : 0;
-      const platformText =
-        [...new Set(leader.platforms)].join(" + ") || "rating logged";
       const gapText = ratedPlayers[1]
         ? gap > 0
           ? `${formatNumber(gap)} points clear of #2`
           : "level with #2"
         : "first rating on the board";
-      meta = `${platformText} · ${gapText}`;
+      meta = `${platformName} · ${gapText}`;
     }
   }
 
   return (
     <section className={styles.hero} aria-labelledby="champion-name">
       <div className={styles.champion}>
-        <p className="eyebrow">Top of the board</p>
+        <p className="eyebrow">Top of the board · {platformName}</p>
         <div className={styles.championNameRow}>
           <span className={styles.championRank}>
             {loading ? "—" : leader ? padRank(leader.rank) : "—"}

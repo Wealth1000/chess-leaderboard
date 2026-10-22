@@ -1,12 +1,21 @@
 import { formatDate } from "@/lib/format";
+import type { Platform } from "@/lib/types";
+import PlatformSwitch from "./platform-switch";
 import styles from "./masthead.module.css";
 
 type MastheadProps = {
   latestDate: string;
   loading: boolean;
+  platform: Platform;
+  onPlatformChange: (platform: Platform) => void;
 };
 
-export default function Masthead({ latestDate, loading }: MastheadProps) {
+export default function Masthead({
+  latestDate,
+  loading,
+  platform,
+  onPlatformChange,
+}: MastheadProps) {
   const dateLabel = loading ? "—" : latestDate ? formatDate(latestDate) : "No snapshot";
 
   return (
@@ -19,10 +28,14 @@ export default function Masthead({ latestDate, loading }: MastheadProps) {
         </span>
       </a>
 
-      <div className={styles.meta}>
-        <span className={styles.statusDot} aria-hidden="true" />
-        <span>Snapshot</span>
-        <time dateTime={latestDate || undefined}>{dateLabel}</time>
+      <div className={styles.controls}>
+        <PlatformSwitch value={platform} onChange={onPlatformChange} />
+
+        <div className={styles.meta}>
+          <span className={styles.statusDot} aria-hidden="true" />
+          <span>Snapshot</span>
+          <time dateTime={latestDate || undefined}>{dateLabel}</time>
+        </div>
       </div>
     </header>
   );

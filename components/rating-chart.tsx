@@ -2,23 +2,32 @@
 
 import type { ChartConfiguration } from "chart.js";
 import { useEffect, useMemo, useRef } from "react";
-import { formatShortDate } from "@/lib/format";
+import { formatNumber, formatShortDate, platformLabel } from "@/lib/format";
 import { getPlayerHistory } from "@/lib/history";
-import type { RankedPlayer, Snapshot } from "@/lib/types";
+import type { Platform, RankedPlayer, Snapshot } from "@/lib/types";
 import styles from "./rating-chart.module.css";
 
-const PLATFORM_COLORS = ["#b23b1e", "#2f6b54", "#c58b1e"];
+const PLATFORM_COLORS: Record<Platform, string> = {
+  "chess.com": "#b23b1e",
+  lichess: "#2f6b54",
+};
 
 type RatingChartProps = {
   player: RankedPlayer;
   snapshots: Snapshot[];
+  platform: Platform;
 };
 
-export default function RatingChart({ player, snapshots }: RatingChartProps) {
+export default function RatingChart({
+  player,
+  snapshots,
+  platform,
+}: RatingChartProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { playerSnapshots, dates, platforms } = useMemo(
-    () => getPlayerHistory(snapshots, player.id),
-    [player.id, snapshots],
+  const platformName = platformLabel(platform);
+  const { playerSnapshots, dates } = useMemo(
+    () => getPlayerHistory(snapshots, player.id, platform),
+    [player.id, platform, snapshots],
   );
 
   useEffect(() => {
@@ -38,24 +47,20 @@ export default function RatingChart({ player, snapshots }: RatingChartProps) {
         rootStyle.getPropertyValue("--mono").trim() || "monospace";
       const bodyFont =
         rootStyle.getPropertyValue("--body").trim() || "sans-serif";
+      const color = PLATFORM_COLORS[platform];
 
       const config: ChartConfiguration<"line"> = {
         type: "line",
         data: {
           labels: dates.map(formatShortDate),
-          datasets: platforms.map((platform, index) => {
-            const color = PLATFORM_COLORS[index % PLATFORM_COLORS.length];
-            return {
-              label: platform,
+          datasets: [
+            {
+              label: platformName,
               data: dates.map((date) => {
                 const snapshot = playerSnapshots.find(
                   (entry) => entry.date === date,
                 );
-                return (
-                  snapshot?.ratings.find(
-                    (rating) => rating.platform === platform,
-                  )?.rating ?? null
-                );
+                return snapshot?.ratings[0]?.rating ?? null;
               }),
               borderColor: color,
               backgroundColor: color,
@@ -68,8 +73,8 @@ export default function RatingChart({ player, snapshots }: RatingChartProps) {
               tension: 0.28,
               spanGaps: true,
               fill: false,
-            };
-          }),
+            },
+          ],
         },
         options: {
           responsive: true,
@@ -80,18 +85,7 @@ export default function RatingChart({ player, snapshots }: RatingChartProps) {
             : { duration: 420 },
           interaction: { mode: "index", intersect: false },
           plugins: {
-            legend: {
-              position: "bottom",
-              labels: {
-                usePointStyle: true,
-                pointStyle: "circle",
-                boxWidth: 7,
-                boxHeight: 7,
-                padding: 16,
-                color: "#14231d",
-                font: { family: monoFont, size: 10 },
-              },
-            },
+            legend: { display: false },
             tooltip: {
               backgroundColor: "#14231d",
               titleColor: "#f4ecd9",
@@ -99,6 +93,10 @@ export default function RatingChart({ player, snapshots }: RatingChartProps) {
               padding: 10,
               titleFont: { family: monoFont, size: 10 },
               bodyFont: { family: bodyFont, size: 12 },
+              callbacks: {
+                label: (context) =>
+                  `${platformName}: ${formatNumber(context.parsed.y)}`,
+              },
             },
           },
           scales: {
@@ -132,7 +130,7 @@ export default function RatingChart({ player, snapshots }: RatingChartProps) {
       cancelled = true;
       chart?.destroy();
     };
-  }, [dates, platforms, player.id, playerSnapshots]);
+  }, [dates, platform, platformName, player.id, playerSnapshots]);
 
   if (dates.length < 2) {
     return (
@@ -140,21 +138,17 @@ export default function RatingChart({ player, snapshots }: RatingChartProps) {
         <div className={styles.ghostLine} aria-hidden="true" />
         <p>
           <strong>
-            {dates.length === 1 ? "The line starts here." : "No rating history yet."}
+            {dates.length === 1
+              ? "The line starts here."
+              : `No ${platformName} history yet.`}
           </strong>{" "}
           {dates.length === 1
             ? "This is the first snapshot. Check back after the next daily update to see the trend."
-            : "This player will appear on the chart after the next daily snapshot."}
+            : `This player has no ${platformName} ratings in the snapshots.`}
         </p>
-        {platforms.length ? (
-          <div className={styles.platformChips}>
-            {platforms.map((platform) => (
-              <span className={styles.chip} key={platform}>
-                {platform}
-              </span>
-            ))}
-          </div>
-        ) : null}
+        <div className={styles.platformChips}>
+          <span className={styles.chip}>{platformName}</span>
+        </div>
       </div>
     );
   }
@@ -164,7 +158,7 @@ export default function RatingChart({ player, snapshots }: RatingChartProps) {
       <canvas
         ref={canvasRef}
         role="img"
-        aria-label={`Rating history for ${player.name}`}
+        aria-label={`${platformName} rating history for ${player.name}`}
       />
     </div>
   );

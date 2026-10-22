@@ -1,14 +1,20 @@
-import type { LeaderboardModel, Player, RankedPlayer, Snapshot } from "@/lib/types";
+import type {
+  LeaderboardModel,
+  Platform,
+  Player,
+  RankedPlayer,
+  Snapshot,
+} from "@/lib/types";
 
 export const BOARD_SQUARES = 64;
 
-export function ratingFor(snapshot: Snapshot | null) {
-  const ratings =
-    snapshot?.ratings
-      .map((rating) => rating.rating)
-      .filter((rating): rating is number => typeof rating === "number") ?? [];
-
-  return ratings.length ? Math.max(...ratings) : null;
+export function ratingFor(snapshot: Snapshot | null, platform: Platform) {
+  return (
+    snapshot?.ratings.find(
+      (rating) =>
+        rating.platform === platform && typeof rating.rating === "number",
+    )?.rating ?? null
+  );
 }
 
 export function latestSnapshotDate(snapshots: Snapshot[]) {
@@ -21,6 +27,7 @@ export function latestSnapshotDate(snapshots: Snapshot[]) {
 export function buildLeaderboard(
   players: Player[],
   snapshots: Snapshot[],
+  platform: Platform,
 ): LeaderboardModel {
   const latestDate = latestSnapshotDate(snapshots);
   const latestSnapshots = latestDate
@@ -34,7 +41,13 @@ export function buildLeaderboard(
     .map((player) => {
       const snapshot = snapshotsByPlayer.get(player.id) ?? null;
       const platforms =
-        snapshot?.ratings.map((rating) => rating.platform) ?? [];
+        snapshot?.ratings
+          .map((rating) => rating.platform)
+          .filter(
+            (entry, index, all) =>
+              all.indexOf(entry) === index &&
+              (entry === "chess.com" || entry === "lichess"),
+          ) ?? [];
       const aliasText = [
         player.id,
         player.name,
@@ -49,15 +62,26 @@ export function buildLeaderboard(
         ...player,
         snapshot,
         platforms,
-        rating: ratingFor(snapshot),
+        rating: ratingFor(snapshot, platform),
         aliasText,
         rank: 0,
       };
     })
-    .sort((a, b) => (b.rating ?? -1) - (a.rating ?? -1));
+    .sort((a, b) => {
+      if (a.rating == null && b.rating == null) {
+        return a.name.localeCompare(b.name);
+      }
+      if (a.rating == null) return 1;
+      if (b.rating == null) return -1;
+      return b.rating - a.rating;
+    });
 
-  ranked.forEach((player, index) => {
-    player.rank = index + 1;
+  let rank = 0;
+  ranked.forEach((player) => {
+    if (player.rating != null) {
+      rank += 1;
+      player.rank = rank;
+    }
   });
 
   return {

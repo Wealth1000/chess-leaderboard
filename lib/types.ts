@@ -1,3 +1,5 @@
+export type Platform = "chess.com" | "lichess";
+
 export type Player = {
   id: string;
   name: string;
@@ -7,7 +9,7 @@ export type Player = {
 
 export type PlayerRating = {
   username: string;
-  platform: string;
+  platform: Platform;
   rating: number | null;
 };
 
@@ -25,7 +27,7 @@ export type SnapshotFile = {
 export type RankedPlayer = Player & {
   rank: number;
   rating: number | null;
-  platforms: string[];
+  platforms: Platform[];
   aliasText: string;
   snapshot: Snapshot | null;
 };

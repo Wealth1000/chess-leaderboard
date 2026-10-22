@@ -1,0 +1,184 @@
+.section {
+  padding-top: clamp(48px, 7vw, 76px);
+}
+
+.sectionHead {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 20px;
+}
+
+.sectionHead h2 {
+  margin: 0;
+  color: var(--buff);
+  font-family: var(--display);
+  font-size: clamp(2rem, 4.2vw, 3.5rem);
+  font-weight: 400;
+  letter-spacing: 0.015em;
+  line-height: 0.94;
+  text-transform: uppercase;
+}
+
+.sectionNote {
+  margin: 0 0 5px;
+  color: rgba(244, 236, 217, 0.56);
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.chartCard {
+  padding: clamp(18px, 3vw, 30px);
+  background: var(--buff);
+  color: var(--ink);
+  box-shadow: 0 30px 64px rgba(0, 0, 0, 0.26);
+}
+
+.cardHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 22px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px 18px;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.swatch {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+}
+
+.legendRank {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.52rem;
+  font-weight: 700;
+}
+
+.legendName {
+  max-width: 9.5rem;
+  overflow: hidden;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.legendRating {
+  font-family: var(--display);
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.chartNote {
+  flex: 0 0 auto;
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.08em;
+  text-align: right;
+  text-transform: uppercase;
+}
+
+.chartWrap {
+  position: relative;
+  height: 400px;
+}
+
+.snapshotNote {
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.empty {
+  display: grid;
+  min-height: 280px;
+  place-items: center;
+  color: var(--muted);
+  font-size: 0.94rem;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .cardHead {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .chartNote {
+    text-align: left;
+  }
+
+  .chartWrap {
+    height: 340px;
+  }
+}
+
+@media (max-width: 700px) {
+  .sectionHead {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .sectionNote {
+    margin: 0;
+  }
+
+  .chartCard {
+    padding: 16px 14px;
+  }
+
+  .legend {
+    gap: 8px 14px;
+  }
+
+  .legendName {
+    max-width: 7.2rem;
+    font-size: 0.76rem;
+  }
+
+  .chartWrap {
+    height: 300px;
+  }
+
+  .empty {
+    min-height: 220px;
+  }
+}
+
+@media (max-width: 430px) {
+  .legendName {
+    max-width: 6rem;
+  }
+
+  .legendRating {
+    display: none;
+  }
+
+  .chartWrap {
+    height: 260px;
+  }
+}

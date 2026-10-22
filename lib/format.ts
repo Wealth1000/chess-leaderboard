@@ -1,3 +1,12 @@
+import type { Platform } from "@/lib/types";
+
+export const PLATFORM_LABELS: Record<Platform, string> = {
+  "chess.com": "Chess.com",
+  lichess: "Lichess",
+};
+
+export const PLATFORMS: Platform[] = ["chess.com", "lichess"];
+
 export const padRank = (rank: number) => String(rank).padStart(2, "0");
 
 export const formatNumber = (value: number | null | undefined) =>
@@ -23,8 +32,6 @@ export function formatShortDate(isoDate: string) {
   });
 }
 
-export function platformLabel(platforms: string[]) {
-  if (!platforms.length) return "No data";
-  if (platforms.length > 1) return `${platforms.length} platforms`;
-  return platforms[0] === "chess.com" ? "Chess.com" : "Lichess";
+export function platformLabel(platform: Platform) {
+  return PLATFORM_LABELS[platform];
 }
