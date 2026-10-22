@@ -295,7 +295,7 @@
         row.innerHTML = `
           <td>${index + 1}</td>
           <td>${player.playerName}</td>
-          <td style="text-align: right" class="rating">${player.rating || '-'}</td>
+          <td style="text-align: right" class="rating">${player.rating ?? 'N/A'}</td>
           <td class="platforms">${player.ratings.map(r => r.platform).join(', ')}</td>
         `;
         tbody.appendChild(row);
