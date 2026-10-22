@@ -1,17 +1,22 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { formatNumber, padRank, platformLabel } from "@/lib/format";
+import {
+  categoryLabel,
+  formatNumber,
+  padRank,
+  platformLabel,
+} from "@/lib/format";
 import { BOARD_SQUARES, getSeatInfo } from "@/lib/leaderboard";
-import type { Platform, RankedPlayer } from "@/lib/types";
+import type { RatingsViewModel } from "@/lib/ratings-view";
+import ChangeBadge, { changeLabel } from "./change-badge";
 import styles from "./board.module.css";
 
 type ClubBoardProps = {
-  ranked: RankedPlayer[];
+  model: RatingsViewModel;
   loading: boolean;
   warning: boolean;
-  platform: Platform;
-  onSelect: (player: RankedPlayer) => void;
+  onSelect: (playerId: string) => void;
 };
 
 function initialTileClass(index: number) {
@@ -21,13 +26,13 @@ function initialTileClass(index: number) {
 }
 
 export default function ClubBoard({
-  ranked,
+  model,
   loading,
   warning,
-  platform,
   onSelect,
 }: ClubBoardProps) {
-  const platformName = platformLabel(platform);
+  const platformName = platformLabel(model.platform);
+  const categoryName = categoryLabel(model.category);
   const [query, setQuery] = useState("");
   const boardRef = useRef<HTMLDivElement>(null);
 
@@ -36,14 +41,12 @@ export default function ClubBoard({
   const visiblePlayers = useMemo(
     () =>
       filtering
-        ? ranked.filter((player) => player.aliasText.includes(needle))
-        : ranked,
-    [filtering, needle, ranked],
+        ? model.ranked.filter((player) => player.aliasText.includes(needle))
+        : model.ranked,
+    [filtering, needle, model.ranked],
   );
 
-  const seats = getSeatInfo(ranked.length);
-  const hasSnapshots = ranked.some((player) => player.snapshot);
-  const ratedCount = ranked.filter((player) => player.rating != null).length;
+  const seats = getSeatInfo(model.ranked.length);
 
   const applyParity = useCallback(() => {
     const board = boardRef.current;
@@ -80,11 +83,11 @@ export default function ClubBoard({
     return () => observer.disconnect();
   }, [applyParity]);
 
-  let countLabel = `${ranked.length} players`;
+  let countLabel = `${model.ranked.length} players`;
   if (loading) countLabel = "Loading…";
-  else if (filtering) countLabel = `${visiblePlayers.length} of ${ranked.length}`;
-  else if (ratedCount < ranked.length) {
-    countLabel = `${ratedCount} rated of ${ranked.length}`;
+  else if (filtering) countLabel = `${visiblePlayers.length} of ${model.ranked.length}`;
+  else if (model.ratedCount < model.ranked.length) {
+    countLabel = `${model.ratedCount} rated of ${model.ranked.length}`;
   }
 
   let notice: string | null = null;
@@ -92,19 +95,24 @@ export default function ClubBoard({
     if (warning) {
       notice =
         "Ratings did not load. The player list is here, but ratings are unavailable. Reload the page to try again.";
-    } else if (!hasSnapshots) {
+    } else if (!model.hasSnapshots) {
       notice =
         "No snapshots yet. The board will rank players after the next daily update.";
-    } else if (!ratedCount) {
-      notice = `No ${platformName} ratings in the latest snapshot. Switch platform or check back after the next update.`;
+    } else if (!model.ratedCount) {
+      notice = `No ${platformName} ${categoryName} ratings in the latest snapshot. Switch platform or category, or check back after the next update.`;
     }
   }
+
+  const showChangeNote =
+    !loading && model.hasSnapshots && !model.changesAvailable;
 
   return (
     <section className={styles.boardSection} aria-labelledby="board-heading">
       <div className={styles.sectionHead}>
         <div>
-          <p className="eyebrow eyebrowLight">The club board · {platformName}</p>
+          <p className="eyebrow eyebrowLight">
+            The club board · {platformName} · {categoryName}
+          </p>
           <h2 id="board-heading">Every player, ranked.</h2>
         </div>
         <div className={styles.boardTools}>
@@ -125,6 +133,13 @@ export default function ClubBoard({
           <span className={styles.boardCount}>{countLabel}</span>
         </div>
       </div>
+
+      {showChangeNote ? (
+        <p className={styles.changeNote}>
+          Growth starts with the next daily snapshot. Dashes in the change
+          badges mean there is no comparison date yet, not zero movement.
+        </p>
+      ) : null}
 
       <div className={styles.board} id="board" ref={boardRef} aria-live="polite">
         {loading ? (
@@ -151,6 +166,8 @@ export default function ClubBoard({
                 .filter(Boolean)
                 .join(" ");
 
+              const changeText = changeLabel(player.change);
+
               return (
                 <button
                   type="button"
@@ -158,26 +175,33 @@ export default function ClubBoard({
                   key={player.id}
                   aria-label={
                     player.rating == null
-                      ? `${player.name}, unrated on ${platformName}. Open scorecard.`
-                      : `Number ${player.rank}: ${player.name}, ${player.rating} ${platformName} rating. Open scorecard.`
+                      ? `${player.name}, unrated in ${categoryName} on ${platformName}. Open scorecard.`
+                      : `Number ${player.rank}: ${player.name}, ${player.rating} ${platformName} ${categoryName} rating. ${changeText}. Open scorecard.`
                   }
-                  onClick={() => onSelect(player)}
+                  onClick={() => onSelect(player.id)}
                 >
                   <span className={styles.tileTop}>
                     <span className={styles.tileRank}>
                       {player.rating == null ? "—" : padRank(player.rank)}
                     </span>
                     <span className={styles.tilePlatform}>
-                      {player.rating == null
-                        ? "Unrated"
-                        : platformLabel(platform)}
+                      {player.rating == null ? "Unrated" : categoryName}
                     </span>
                   </span>
                   <span className={styles.tileName} title={player.name}>
                     {player.name}
                   </span>
-                  <span className={styles.tileRating}>
-                    {formatNumber(player.rating)}
+                  <span className={styles.tileBottom}>
+                    <span className={styles.tileRating}>
+                      {formatNumber(player.rating)}
+                    </span>
+                    {player.rating != null ? (
+                      <ChangeBadge
+                        change={player.change}
+                        compact
+                        className={styles.tileChange}
+                      />
+                    ) : null}
                   </span>
                 </button>
               );

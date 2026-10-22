@@ -1,10 +1,16 @@
 "use client";
 
 import type { ChartConfiguration } from "chart.js";
-import { useEffect, useMemo, useRef } from "react";
-import { formatNumber, formatShortDate, platformLabel } from "@/lib/format";
-import { getPlayerHistory } from "@/lib/history";
-import type { Platform, RankedPlayer, Snapshot } from "@/lib/types";
+import { useEffect, useRef } from "react";
+import {
+  categoryLabel,
+  formatNumber,
+  formatShortDate,
+  platformLabel,
+  rangeLabel,
+} from "@/lib/format";
+import type { ScorecardHistoryPoint } from "@/lib/ratings-view";
+import type { Category, Platform, RangeKey } from "@/lib/types";
 import styles from "./rating-chart.module.css";
 
 const PLATFORM_COLORS: Record<Platform, string> = {
@@ -13,25 +19,27 @@ const PLATFORM_COLORS: Record<Platform, string> = {
 };
 
 type RatingChartProps = {
-  player: RankedPlayer;
-  snapshots: Snapshot[];
+  playerName: string;
   platform: Platform;
+  category: Category;
+  range: RangeKey;
+  history: ScorecardHistoryPoint[];
 };
 
 export default function RatingChart({
-  player,
-  snapshots,
+  playerName,
   platform,
+  category,
+  range,
+  history,
 }: RatingChartProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const platformName = platformLabel(platform);
-  const { playerSnapshots, dates } = useMemo(
-    () => getPlayerHistory(snapshots, player.id, platform),
-    [player.id, platform, snapshots],
-  );
+  const categoryName = categoryLabel(category);
+  const rangeName = rangeLabel(range);
 
   useEffect(() => {
-    if (dates.length < 2) return;
+    if (history.length < 2) return;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -52,16 +60,11 @@ export default function RatingChart({
       const config: ChartConfiguration<"line"> = {
         type: "line",
         data: {
-          labels: dates.map(formatShortDate),
+          labels: history.map((point) => formatShortDate(point.date)),
           datasets: [
             {
-              label: platformName,
-              data: dates.map((date) => {
-                const snapshot = playerSnapshots.find(
-                  (entry) => entry.date === date,
-                );
-                return snapshot?.ratings[0]?.rating ?? null;
-              }),
+              label: `${categoryName} rating`,
+              data: history.map((point) => point.rating),
               borderColor: color,
               backgroundColor: color,
               borderWidth: 2.5,
@@ -95,7 +98,8 @@ export default function RatingChart({
               bodyFont: { family: bodyFont, size: 12 },
               callbacks: {
                 label: (context) =>
-                  `${platformName}: ${formatNumber(context.parsed.y)}`,
+                  `${categoryName} rating: ${formatNumber(context.parsed.y)}`,
+                footer: () => `${platformName} · ${rangeName}`,
               },
             },
           },
@@ -113,6 +117,12 @@ export default function RatingChart({
               beginAtZero: false,
               border: { display: false },
               grid: { color: "rgba(20, 35, 29, 0.12)" },
+              title: {
+                display: true,
+                text: `${categoryName} rating`,
+                color: "#5d6c60",
+                font: { family: monoFont, size: 9 },
+              },
               ticks: {
                 color: "#5d6c60",
                 precision: 0,
@@ -130,24 +140,26 @@ export default function RatingChart({
       cancelled = true;
       chart?.destroy();
     };
-  }, [dates, platform, platformName, player.id, playerSnapshots]);
+  }, [categoryName, history, platform, platformName, rangeName]);
 
-  if (dates.length < 2) {
+  if (history.length < 2) {
     return (
       <div className={styles.firstSnapshot}>
         <div className={styles.ghostLine} aria-hidden="true" />
         <p>
           <strong>
-            {dates.length === 1
-              ? "The line starts here."
-              : `No ${platformName} history yet.`}
+            {history.length === 1
+              ? `The ${categoryName.toLowerCase()} line starts here.`
+              : `No ${categoryName.toLowerCase()} history in this range.`}
           </strong>{" "}
-          {dates.length === 1
-            ? "This is the first snapshot. Check back after the next daily update to see the trend."
-            : `This player has no ${platformName} ratings in the snapshots.`}
+          {history.length === 1
+            ? `This is the first ${categoryName.toLowerCase()} rating for ${playerName} on ${platformName} in the ${rangeName} range. Check back after the next daily update to see the trend.`
+            : `${playerName} has no ${platformName} ${categoryName.toLowerCase()} ratings in the ${rangeName} range. Try another range or check back after the next snapshot.`}
         </p>
         <div className={styles.platformChips}>
           <span className={styles.chip}>{platformName}</span>
+          <span className={styles.chip}>{categoryName}</span>
+          <span className={styles.chip}>{rangeName}</span>
         </div>
       </div>
     );
@@ -158,7 +170,7 @@ export default function RatingChart({
       <canvas
         ref={canvasRef}
         role="img"
-        aria-label={`${platformName} rating history for ${player.name}`}
+        aria-label={`${platformName} ${categoryName} rating history for ${playerName}, ${rangeName} range`}
       />
     </div>
   );

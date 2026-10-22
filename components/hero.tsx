@@ -1,62 +1,47 @@
-import { formatNumber, padRank, platformLabel } from "@/lib/format";
+import { categoryLabel, formatNumber, padRank, platformLabel } from "@/lib/format";
 import { getSeatInfo } from "@/lib/leaderboard";
-import type { Platform, RankedPlayer } from "@/lib/types";
+import type { RatingsViewModel } from "@/lib/ratings-view";
+import ChangeBadge from "./change-badge";
 import styles from "./hero.module.css";
 
 type HeroProps = {
-  ranked: RankedPlayer[];
-  playerCount: number;
+  model: RatingsViewModel;
   loading: boolean;
   warning: boolean;
-  platform: Platform;
 };
 
-export default function Hero({
-  ranked,
-  playerCount,
-  loading,
-  warning,
-  platform,
-}: HeroProps) {
-  const platformName = platformLabel(platform);
-  const ratedPlayers = ranked.filter((player) => player.rating != null);
-  const leader = ratedPlayers[0] ?? null;
+export default function Hero({ model, loading, warning }: HeroProps) {
+  const platformName = platformLabel(model.platform);
+  const categoryName = categoryLabel(model.category);
+  const { leader, rated, average, top10, changesAvailable } = model;
   const leaderRating = leader?.rating ?? null;
-  const seats = getSeatInfo(playerCount);
-
-  const average = ratedPlayers.length
-    ? Math.round(
-        ratedPlayers.reduce((total, player) => total + (player.rating ?? 0), 0) /
-          ratedPlayers.length,
-      )
-    : null;
-  const top10 = ratedPlayers.length
-    ? ratedPlayers[Math.min(9, ratedPlayers.length - 1)].rating
-    : null;
+  const seats = getSeatInfo(model.ranked.length);
 
   let meta = "Fetching the latest snapshot…";
   if (!loading) {
     if (!leader) {
       meta = warning
         ? "Ratings did not load. Reload the page to try again."
-        : `No ${platformName} ratings in the latest snapshot.`;
+        : `No ${platformName} ${categoryName} ratings in the latest snapshot.`;
     } else {
-      const gap = ratedPlayers[1]
-        ? (leaderRating ?? 0) - (ratedPlayers[1].rating ?? 0)
+      const gap = rated[1]
+        ? (leaderRating ?? 0) - (rated[1].rating ?? 0)
         : 0;
-      const gapText = ratedPlayers[1]
+      const gapText = rated[1]
         ? gap > 0
           ? `${formatNumber(gap)} points clear of #2`
           : "level with #2"
         : "first rating on the board";
-      meta = `${platformName} · ${gapText}`;
+      meta = `${platformName} ${categoryName} · ${gapText}`;
     }
   }
 
   return (
     <section className={styles.hero} aria-labelledby="champion-name">
       <div className={styles.champion}>
-        <p className="eyebrow">Top of the board · {platformName}</p>
+        <p className="eyebrow">
+          Top of the board · {platformName} · {categoryName}
+        </p>
         <div className={styles.championNameRow}>
           <span className={styles.championRank}>
             {loading ? "—" : leader ? padRank(leader.rank) : "—"}
@@ -69,6 +54,11 @@ export default function Hero({
           <strong>{loading ? "—" : formatNumber(leaderRating)}</strong>
           <span>rating</span>
         </div>
+        {!loading && leader ? (
+          <div className={styles.championChange}>
+            <ChangeBadge change={leader.change} showDate />
+          </div>
+        ) : null}
         <p className={styles.championMeta}>{meta}</p>
       </div>
 
@@ -81,7 +71,7 @@ export default function Hero({
           {loading ? (
             <li className={styles.chaseEmpty}>Loading…</li>
           ) : leader ? (
-            ratedPlayers.slice(1, 6).map((player) => (
+            rated.slice(1, 6).map((player) => (
               <li className={styles.chaseRow} key={player.id}>
                 <span className={styles.chaseRank}>{padRank(player.rank)}</span>
                 <span className={styles.chaseName} title={player.name}>
@@ -91,6 +81,7 @@ export default function Hero({
                   <span className={styles.chaseRating}>
                     {formatNumber(player.rating)}
                   </span>
+                  <ChangeBadge change={player.change} compact />
                   <span className={styles.chaseGap}>
                     −{formatNumber((leaderRating ?? 0) - (player.rating ?? 0))}
                   </span>
@@ -106,7 +97,7 @@ export default function Hero({
       <dl className={styles.heroStats}>
         <div>
           <dt>Players</dt>
-          <dd>{formatNumber(playerCount)}</dd>
+          <dd>{formatNumber(model.ranked.length)}</dd>
         </div>
         <div>
           <dt>Club average</dt>
@@ -121,6 +112,13 @@ export default function Hero({
           <dd>{seats.value}</dd>
         </div>
       </dl>
+
+      {!loading && model.hasSnapshots && !changesAvailable ? (
+        <p className={styles.changesNote}>
+          Rating changes appear once an older snapshot exists for this range.
+          Until then, neutral dashes mean “no comparison yet”, not “no change”.
+        </p>
+      ) : null}
     </section>
   );
 }

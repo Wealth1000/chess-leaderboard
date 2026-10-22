@@ -1,93 +1,49 @@
+import { buildRatingsView } from "@/lib/ratings-view";
 import type {
+  Category,
   LeaderboardModel,
+  MainCategory,
   Platform,
   Player,
-  RankedPlayer,
   Snapshot,
 } from "@/lib/types";
 
 export const BOARD_SQUARES = 64;
 
-export function ratingFor(snapshot: Snapshot | null, platform: Platform) {
+export { latestSnapshotDate } from "@/lib/ratings-view";
+
+export function ratingFor(
+  snapshot: Snapshot | null,
+  platform: Platform,
+  category: Category = "rapid",
+) {
   return (
     snapshot?.ratings.find(
       (rating) =>
-        rating.platform === platform && typeof rating.rating === "number",
+        rating.platform === platform &&
+        rating.category === category &&
+        typeof rating.rating === "number",
     )?.rating ?? null
   );
-}
-
-export function latestSnapshotDate(snapshots: Snapshot[]) {
-  const dates = [
-    ...new Set(snapshots.map((snapshot) => snapshot.date).filter(Boolean)),
-  ].sort();
-  return dates[dates.length - 1] ?? "";
 }
 
 export function buildLeaderboard(
   players: Player[],
   snapshots: Snapshot[],
   platform: Platform,
+  category: MainCategory = "rapid",
 ): LeaderboardModel {
-  const latestDate = latestSnapshotDate(snapshots);
-  const latestSnapshots = latestDate
-    ? snapshots.filter((snapshot) => snapshot.date === latestDate)
-    : [];
-  const snapshotsByPlayer = new Map(
-    latestSnapshots.map((snapshot) => [snapshot.playerId, snapshot]),
-  );
-
-  const ranked: RankedPlayer[] = players
-    .map((player) => {
-      const snapshot = snapshotsByPlayer.get(player.id) ?? null;
-      const platforms =
-        snapshot?.ratings
-          .map((rating) => rating.platform)
-          .filter(
-            (entry, index, all) =>
-              all.indexOf(entry) === index &&
-              (entry === "chess.com" || entry === "lichess"),
-          ) ?? [];
-      const aliasText = [
-        player.id,
-        player.name,
-        player.chessCom,
-        player.lichess,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-
-      return {
-        ...player,
-        snapshot,
-        platforms,
-        rating: ratingFor(snapshot, platform),
-        aliasText,
-        rank: 0,
-      };
-    })
-    .sort((a, b) => {
-      if (a.rating == null && b.rating == null) {
-        return a.name.localeCompare(b.name);
-      }
-      if (a.rating == null) return 1;
-      if (b.rating == null) return -1;
-      return b.rating - a.rating;
-    });
-
-  let rank = 0;
-  ranked.forEach((player) => {
-    if (player.rating != null) {
-      rank += 1;
-      player.rank = rank;
-    }
+  const view = buildRatingsView(players, snapshots, {
+    platform,
+    category,
+    range: "7d",
+    focusPlayerId: null,
   });
 
   return {
-    ranked,
-    latestDate,
-    leader: ranked.find((player) => player.rating != null) ?? null,
+    ranked: view.ranked,
+    latestDate: view.latestDate,
+    leader: view.leader,
   };
 }
 

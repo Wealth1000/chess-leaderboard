@@ -87,16 +87,25 @@
 }
 
 .tileLight {
+  --change-up: #17603f;
+  --change-down: #a53016;
+  --change-neutral: rgba(20, 35, 29, 0.58);
   background: var(--buff);
   color: var(--ink);
 }
 
 .tileDark {
+  --change-up: #8fe0b6;
+  --change-down: #ffb09a;
+  --change-neutral: rgba(244, 236, 217, 0.64);
   background: var(--green-800);
   color: var(--buff);
 }
 
 .tileLeader {
+  --change-up: #a9f0c9;
+  --change-down: #ffd3c4;
+  --change-neutral: rgba(244, 236, 217, 0.72);
   background: var(--accent-deep);
   color: var(--buff);
 }
@@ -159,13 +168,26 @@
   white-space: nowrap;
 }
 
-.tileRating {
-  align-self: flex-end;
+.tileBottom {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 4px;
+  width: 100%;
   margin-top: auto;
+}
+
+.tileRating {
+  min-width: 0;
   font-family: var(--display);
   font-size: clamp(1.05rem, 2.1vw, 2rem);
   letter-spacing: 0.01em;
   line-height: 0.9;
+}
+
+.tileChange {
+  flex: 0 0 auto;
+  padding-bottom: 1px;
 }
 
 .tileOpen {
@@ -244,6 +266,16 @@
   letter-spacing: 0.08em;
   text-align: right;
   text-transform: uppercase;
+}
+
+.changeNote {
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  border-left: 3px solid var(--gold);
+  background: rgba(244, 236, 217, 0.06);
+  color: rgba(244, 236, 217, 0.72);
+  font-size: 0.78rem;
+  line-height: 1.45;
 }
 
 .dataNotice {

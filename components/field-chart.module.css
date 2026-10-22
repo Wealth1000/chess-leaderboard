@@ -1,5 +1,6 @@
 .section {
   padding-top: clamp(48px, 7vw, 76px);
+  scroll-margin-top: 24px;
 }
 
 .sectionHead {
@@ -27,6 +28,7 @@
   font-family: var(--mono);
   font-size: 0.58rem;
   letter-spacing: 0.1em;
+  text-align: right;
   text-transform: uppercase;
 }
 
@@ -35,6 +37,208 @@
   background: var(--buff);
   color: var(--ink);
   box-shadow: 0 30px 64px rgba(0, 0, 0, 0.26);
+}
+
+.controlBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.modeToggle {
+  display: flex;
+  flex: 0 0 auto;
+  border: 1px solid rgba(20, 35, 29, 0.32);
+}
+
+.modeButton {
+  padding: 9px 16px 8px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  text-transform: uppercase;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.modeButton + .modeButton {
+  border-left: 1px solid rgba(20, 35, 29, 0.32);
+}
+
+.modeButton:hover {
+  background: rgba(20, 35, 29, 0.07);
+  color: var(--ink);
+}
+
+.modeButton:focus-visible {
+  outline: 2px solid var(--accent-deep);
+  outline-offset: 2px;
+}
+
+.modeButton[aria-pressed="true"] {
+  background: var(--accent-deep);
+  color: var(--buff);
+}
+
+.focusBar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px 14px;
+  min-width: 0;
+}
+
+.focusStatus {
+  overflow: hidden;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.57rem;
+  letter-spacing: 0.08em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.focusStatus strong {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.textButton {
+  padding: 7px 10px 6px;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 0.56rem;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.textButton:hover {
+  border-color: var(--accent-deep);
+  background: rgba(224, 82, 44, 0.08);
+}
+
+.textButton:focus-visible {
+  outline: 2px solid var(--accent-deep);
+  outline-offset: 2px;
+}
+
+.picker {
+  margin-bottom: 20px;
+  padding: 14px;
+  background: var(--buff-deep);
+  border: 1px solid var(--line);
+}
+
+.picker input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(20, 35, 29, 0.3);
+  border-radius: 0;
+  outline: none;
+  background: var(--buff);
+  color: var(--ink);
+  font-size: 0.88rem;
+}
+
+.picker input::placeholder {
+  color: var(--muted);
+}
+
+.picker input:focus {
+  border-color: var(--accent-deep);
+  box-shadow: 0 0 0 2px rgba(224, 82, 44, 0.16);
+}
+
+.pickerNote {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.54rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.pickerList {
+  max-height: 238px;
+  margin: 10px 0 0;
+  padding: 0;
+  overflow-y: auto;
+  border-top: 1px solid var(--line);
+  list-style: none;
+}
+
+.pickerOption {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  width: 100%;
+  padding: 9px 8px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+}
+
+.pickerOption:hover {
+  background: rgba(20, 35, 29, 0.06);
+}
+
+.pickerOption:focus-visible {
+  outline: 2px solid var(--accent-deep);
+  outline-offset: -2px;
+}
+
+.pickerOption[aria-pressed="true"] {
+  background: var(--accent-deep);
+  color: var(--buff);
+}
+
+.pickerName {
+  overflow: hidden;
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pickerMeta {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.54rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.pickerOption[aria-pressed="true"] .pickerMeta {
+  color: rgba(244, 236, 217, 0.76);
+}
+
+.pickerEmpty {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 0.84rem;
 }
 
 .cardHead {
@@ -99,6 +303,92 @@
   text-transform: uppercase;
 }
 
+.focusSummary {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin: 0 0 20px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.focusSummary > div {
+  min-width: 0;
+  padding: 13px 14px 12px 0;
+  border-right: 1px solid var(--line);
+}
+
+.focusSummary > div:not(:first-child) {
+  padding-left: 14px;
+}
+
+.focusSummary > div:last-child {
+  border-right: 0;
+}
+
+.focusSummary dt {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.52rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.focusSummary dd {
+  margin: 5px 0 0;
+  font-family: var(--display);
+  font-size: clamp(1.25rem, 2vw, 1.75rem);
+  line-height: 1;
+}
+
+.summaryMeta {
+  display: block;
+  margin-top: 3px;
+  overflow: hidden;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.5rem;
+  letter-spacing: 0.04em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.groupNote {
+  margin: 0 0 18px;
+  padding: 10px 14px;
+  border-left: 3px solid var(--gold);
+  background: rgba(217, 164, 65, 0.1);
+  color: var(--ink);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.focusState {
+  max-width: 62ch;
+  margin: 0 0 20px;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  background: var(--buff-deep);
+}
+
+.focusState p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.focusState .focusStateTitle {
+  margin-bottom: 6px;
+  color: var(--ink);
+  font-family: var(--display);
+  font-size: 1.35rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
 .chartWrap {
   position: relative;
   height: 400px;
@@ -110,6 +400,7 @@
   border-top: 1px solid var(--line);
   color: var(--muted);
   font-size: 0.8rem;
+  line-height: 1.5;
 }
 
 .empty {
@@ -121,7 +412,31 @@
   text-align: center;
 }
 
+@media (max-width: 1000px) {
+  .focusSummary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .focusSummary > div:nth-child(3) {
+    border-right: 0;
+  }
+
+  .focusSummary > div:nth-child(n + 4) {
+    border-top: 1px solid var(--line);
+  }
+}
+
 @media (max-width: 900px) {
+  .controlBar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .focusBar {
+    justify-content: flex-start;
+  }
+
   .cardHead {
     flex-direction: column;
     gap: 12px;
@@ -145,6 +460,7 @@
 
   .sectionNote {
     margin: 0;
+    text-align: left;
   }
 
   .chartCard {
@@ -160,6 +476,22 @@
     font-size: 0.76rem;
   }
 
+  .focusSummary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .focusSummary > div:nth-child(2n) {
+    border-right: 0;
+  }
+
+  .focusSummary > div:nth-child(3) {
+    border-right: 1px solid var(--line);
+  }
+
+  .focusSummary > div:nth-child(n + 3) {
+    border-top: 1px solid var(--line);
+  }
+
   .chartWrap {
     height: 300px;
   }
@@ -170,12 +502,25 @@
 }
 
 @media (max-width: 430px) {
+  .modeToggle {
+    width: 100%;
+  }
+
+  .modeButton {
+    flex: 1;
+  }
+
   .legendName {
     max-width: 6rem;
   }
 
   .legendRating {
     display: none;
+  }
+
+  .focusStatus {
+    width: 100%;
+    white-space: normal;
   }
 
   .chartWrap {

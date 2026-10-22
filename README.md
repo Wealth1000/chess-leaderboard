@@ -13,8 +13,10 @@ chess.com and Lichess profiles, then ranked on a club chessboard.
   so a new rating update appears without rebuilding the site
 - **Charts**: Chart.js is loaded on demand for the player scorecard history and
   the composite all-player field chart
-- **Platforms**: The masthead switch re-ranks the whole site, including the hero,
-  board, scorecards, and charts, using either Chess.com or Lichess ratings
+- **Platforms and categories**: The view bar re-ranks the whole site, including
+  the hero, board, scorecards, and charts, using one platform and one category
+  at a time. Rankings always use the latest rating; the selected range only
+  controls change indicators and chart windows.
 - **Hosting**: GitHub Pages, deployed by the workflow in `.github/workflows/deploy.yml`
 
 ## Project layout
@@ -69,10 +71,78 @@ locally, run the command above, then serve `out/` under `/chess-leaderboard/`.
    the list is imported at build time.
 2. **Daily snapshots**: `.github/workflows/daily-update.yml` runs
    `scripts/fetch-ratings.js` every day at 09:00 UTC and writes the results to a
-   GitHub Gist.
+   GitHub Gist. Each account gets all five category entries. Re-running on the
+   same day replaces that day's snapshots instead of skipping the run.
 3. **Live ratings**: On page load, `hooks/use-snapshots.ts` fetches the gist and
-   `lib/leaderboard.ts` ranks the latest snapshot for the selected platform. A
-   failed fetch leaves the player list usable and shows a data warning.
+   the view model ranks the latest snapshot for the selected platform and
+   category. A failed fetch leaves the player list usable and shows a data
+   warning.
+
+## Rating categories
+
+The fetcher requests every supported category explicitly. There is no
+"first available rating" fallback, so a missing category can never silently
+become a blitz or rapid rating.
+
+| Category        | Chess.com source   | Lichess source    |
+| --------------- | ------------------ | ----------------- |
+| Rapid           | `chess_rapid`      | `perfs.rapid`     |
+| Classical/Daily | `chess_daily`      | `perfs.classical` |
+| Blitz           | `chess_blitz`      | `perfs.blitz`     |
+| Bullet          | `chess_bullet`     | `perfs.bullet`    |
+| Puzzle          | Not published      | `perfs.puzzle`    |
+
+Rules:
+
+- Chess.com calls the category Daily; the site stores and displays it as
+  Classical.
+- Chess.com has no current public puzzle rating. Its Puzzle entry is stored as
+  `null`. `tactics.highest.rating` and `puzzle_rush.best.score` are stored as
+  scorecard extras instead and never enter ranking or focus comparisons.
+- A Lichess performance with `games === 0` or no performance object is `null`,
+  even when Lichess supplies a provisional default such as 1500.
+- A `null` rating and a missing rating both mean unavailable, never zero.
+- Chess.com usernames are lowercased in API requests.
+
+Each account emits five rating entries in the gist:
+
+```json
+{
+  "playerId": "wealth98981",
+  "playerName": "Wealth98981",
+  "date": "2026-10-22",
+  "ratings": [
+    {
+      "username": "wealth98981",
+      "platform": "chess.com",
+      "category": "rapid",
+      "rating": 1300
+    }
+  ],
+  "chessComExtras": {
+    "tacticsHigh": 1800,
+    "puzzleRushBest": 32
+  }
+}
+```
+
+The example shows one entry for brevity; a real account includes `rapid`,
+`classical`, `blitz`, `bullet`, and `puzzle`. `chessComExtras` is present only
+for players with a Chess.com account. Lichess-only snapshots omit it.
+
+## Resetting snapshots
+
+The fetcher preserves history by default and replaces only the current date's
+snapshots on a rerun. To clear all existing history and write only a new run,
+set `RESET_SNAPSHOTS=1`:
+
+```bash
+RESET_SNAPSHOTS=1 GIST_ID=... GIST_TOKEN=... node scripts/fetch-ratings.js
+```
+
+This replaces the entire gist snapshot file, so use it only for a deliberate
+reset. The daily workflow does not set this variable, so scheduled runs keep
+history.
 
 ## Adding players
 
