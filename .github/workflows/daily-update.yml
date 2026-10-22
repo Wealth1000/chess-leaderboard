@@ -1,0 +1,32 @@
+name: Daily Rating Update
+
+on:
+  schedule:
+    # Run at 9am UTC daily
+    - cron: '0 9 * * *'
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        run: pnpm install
+      
+      - name: Fetch ratings
+        run: node scripts/fetch-ratings.js
+      
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add data/snapshots.json
+          git diff --quiet && git diff --cached --quiet || git commit -m "📊 Daily rating update: $(date +%Y-%m-%d)"
+          git push

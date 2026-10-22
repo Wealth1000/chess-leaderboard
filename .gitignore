@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
+
+# Next.js
+/.next/
+/out/
+
+# Bundlers
+*.local
+*.alt
+*.backup
+*.bak
+*.old
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Data
+data/snapshots.json
+data/players.json
+public/data/snapshots.json
+public/data/players.json
+src/app/data/snapshots.json
+src/app/data/players.json
