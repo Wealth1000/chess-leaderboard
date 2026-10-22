@@ -1,0 +1,21 @@
+{
+  "snapshots": [
+    {
+      "playerId": "player1",
+      "playerName": "Your Name",
+      "date": "2026-10-22",
+      "ratings": [
+        {
+          "username": "your-chesscom-username",
+          "platform": "chess.com",
+          "rating": null
+        },
+        {
+          "username": "your-lichess-username",
+          "platform": "lichess",
+          "rating": null
+        }
+      ]
+    }
+  ]
+}
