@@ -96,7 +96,7 @@ async function main() {
     const ratings = [];
 
     if (player.chessCom) {
-      const result = await fetchChessComRating(player.chessCom);
+      const result = await fetchChessComRating(player.chessCom.toLowerCase());
       ratings.push(result);
       console.log(`  chess.com: ${result.rating || 'no rating'}`);
     }
@@ -115,7 +115,7 @@ async function main() {
     });
 
     // Be nice to APIs — small delay between requests
-    await new Promise(r => setTimeout(r, 1000));
+    await new Promise(r => setTimeout(r, 200));
   }
 
   snapshots.snapshots.push(...newSnapshots);
