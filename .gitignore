@@ -5,6 +5,12 @@ node_modules/
 .next/
 out/
 
+# TypeScript build info
+*.tsbuildinfo
+
+# pnpm
+pnpm-debug.log*
+
 # Editor
 .vscode/*
 !.vscode/extensions.json

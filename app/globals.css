@@ -1,0 +1,98 @@
+:root {
+  --green-950: #071d17;
+  --green-900: #0b2b22;
+  --green-800: #123d30;
+  --buff: #f4ecd9;
+  --buff-deep: #e9ddc4;
+  --ink: #14231d;
+  --muted: #5d6c60;
+  --accent: #e0522c;
+  --accent-deep: #b23b1e;
+  --gold: #d9a441;
+  --line: rgba(20, 35, 29, 0.16);
+  --line-light: rgba(244, 236, 217, 0.18);
+  --display: var(--font-anton), "Arial Narrow", sans-serif;
+  --mono: var(--font-space-mono), "Courier New", monospace;
+  --body: var(--font-dm-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(1100px 560px at 50% -140px, rgba(244, 236, 217, 0.07), transparent 70%),
+    var(--green-900);
+  color: var(--buff);
+  font-family: var(--body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  color: inherit;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.eyebrow::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  background: var(--accent);
+}
+
+.eyebrowLight {
+  color: rgba(244, 236, 217, 0.62);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
