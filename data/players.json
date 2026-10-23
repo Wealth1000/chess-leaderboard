@@ -32,7 +32,7 @@
     },
     {
       "id": "beeba",
-      "name": "Beeba",
+      "name": "beeba",
       "chessCom": "unlikelyeffect",
       "lichess": "habooboo"
     },
@@ -53,7 +53,7 @@
     },
     {
       "id": "ohenebabaa",
-      "name": "Ohenebabaa",
+      "name": "Ohenebabaa❤️",
       "chessCom": "ohenebabaa"
     },
     {
@@ -114,7 +114,7 @@
     },
     {
       "id": "thefoodvillian",
-      "name": "TheFoodVillian ⬆️",
+      "name": "nagahsaki",
       "chessCom": "thefoodvillian"
     },
     {
@@ -225,7 +225,8 @@
     {
       "id": "mawulikossimensah",
       "name": "MawuliKossiMensah",
-      "chessCom": "mawuliKossiMensah"
+      "chessCom": "mawuliKossiMensah",
+      "lichess": "MawuliKossiMensah"
     },
     {
       "id": "opongjapheth",
@@ -239,7 +240,7 @@
     },
     {
       "id": "elkobina",
-      "name": "Elkobina",
+      "name": "Louis🔥🔥",
       "chessCom": "elkobina"
     },
     {
@@ -311,9 +312,16 @@
       "id": "brightbravo",
       "name": "BrightBravo",
       "chessCom": "brightbravo"
+    },
+    {
+      "id": "fifi_enko",
+      "name": "Fifi_Enko",
+      "lichess": "Fifi_Enko"
     }
   ],
   "formerIds": {
-    "beeba": ["unlikelyeffect"]
+    "beeba": [
+      "unlikelyeffect"
+    ]
   }
 }
