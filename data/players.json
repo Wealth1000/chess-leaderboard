@@ -31,9 +31,10 @@
       "chessCom": "sacrif-ice"
     },
     {
-      "id": "unlikelyeffect",
-      "name": "UnlikelyEffect",
-      "chessCom": "unlikelyeffect"
+      "id": "beeba",
+      "name": "Beeba",
+      "chessCom": "unlikelyeffect",
+      "lichess": "habooboo"
     },
     {
       "id": "ibrahim_246",
