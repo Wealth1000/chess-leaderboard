@@ -312,5 +312,8 @@
       "name": "BrightBravo",
       "chessCom": "brightbravo"
     }
-  ]
+  ],
+  "formerIds": {
+    "beeba": ["unlikelyeffect"]
+  }
 }

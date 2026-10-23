@@ -106,6 +106,71 @@ function buildAccountRatings(username, platform, ratings) {
   }));
 }
 
+// Build an old id -> current id map from the optional `formerIds` field in
+// players.json. A rename keeps the member's history because the existing
+// snapshots still carry the old id; remapping on the way in means a rename
+// costs no extra API calls and no reset. Invalid entries are ignored rather
+// than fatal so a typo can never break the daily update.
+function buildFormerIdMap(players, formerIds) {
+  if (!formerIds || typeof formerIds !== 'object' || Array.isArray(formerIds)) {
+    return new Map();
+  }
+
+  const liveIds = new Set(
+    (Array.isArray(players) ? players : [])
+      .map(player => player?.id)
+      .filter(id => typeof id === 'string' && id)
+  );
+
+  const map = new Map();
+  const claimed = new Set();
+
+  for (const [currentId, former] of Object.entries(formerIds)) {
+    const formerList = Array.isArray(former) ? former : [former];
+
+    for (const formerId of formerList) {
+      if (typeof formerId !== 'string' || !formerId) {
+        console.warn(`⚠️  formerIds: ignoring invalid entry for "${currentId}"`);
+        continue;
+      }
+
+      if (liveIds.has(formerId)) {
+        console.warn(`⚠️  formerIds: "${formerId}" is also a live player id, ignoring`);
+        continue;
+      }
+
+      if (claimed.has(formerId)) {
+        console.warn(`⚠️  formerIds: "${formerId}" maps to more than one player, ignoring`);
+        continue;
+      }
+
+      if (!liveIds.has(currentId)) {
+        console.warn(`⚠️  formerIds: "${currentId}" is not a current player id, ignoring "${formerId}"`);
+        continue;
+      }
+
+      claimed.add(formerId);
+      map.set(formerId, currentId);
+    }
+  }
+
+  return map;
+}
+
+// Rewrite snapshot player ids that used to be another member's id. Snapshots
+// keyed by an id that is neither current nor a known former id are left
+// untouched.
+function remapFormerIds(snapshots, formerIdMap) {
+  if (!Array.isArray(snapshots) || formerIdMap.size === 0) {
+    return snapshots;
+  }
+
+  return snapshots.map(snapshot => {
+    const mapped = snapshot?.playerId && formerIdMap.get(snapshot.playerId);
+    return mapped ? { ...snapshot, playerId: mapped } : snapshot;
+  });
+}
+
 function mergeSnapshots(existingSnapshots, newSnapshots, date, reset) {
   const kept = reset || !Array.isArray(existingSnapshots)
     ? []
@@ -331,10 +396,25 @@ async function main() {
   }
 
   const players = JSON.parse(fs.readFileSync(PLAYERS_FILE, 'utf8'));
+  const formerIdMap = buildFormerIdMap(players.players, players.formerIds);
   const today = new Date().toISOString().slice(0, 10);
   const existing = RESET_SNAPSHOTS
     ? { snapshots: [] }
     : await fetchExistingSnapshots();
+
+  if (formerIdMap.size > 0) {
+    const remapped = existing.snapshots.filter(snapshot => (
+      snapshot?.playerId && formerIdMap.has(snapshot.playerId)
+    )).length;
+    const renamed = [...formerIdMap.entries()]
+      .map(([from, to]) => `${from} → ${to}`)
+      .join(', ');
+    console.log(`🔁 Remapping renamed id(s): ${renamed}`);
+    console.log(remapped > 0
+      ? `   Remapped ${remapped} stored snapshot(s) to current id(s)`
+      : '   (no stored snapshots needed remapping)');
+    existing.snapshots = remapFormerIds(existing.snapshots, formerIdMap);
+  }
 
   const newSnapshots = [];
 
@@ -377,5 +457,7 @@ module.exports = {
   parseChessComStats,
   parseLichessStats,
   buildAccountRatings,
-  mergeSnapshots
+  mergeSnapshots,
+  buildFormerIdMap,
+  remapFormerIds
 };

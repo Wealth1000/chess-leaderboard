@@ -108,8 +108,8 @@ Each account emits five rating entries in the gist:
 
 ```json
 {
-  "playerId": "wealth98981",
-  "playerName": "Wealth98981",
+  "playerId": "wealth",
+  "playerName": "Wealth",
   "date": "2026-10-22",
   "ratings": [
     {
@@ -162,7 +162,30 @@ Edit `data/players.json`:
 ```
 
 Only fill in the platforms each player uses. Use lowercase for chess.com
-usernames.
+usernames. At least one of `chessCom` or `lichess` is required.
+
+### Renaming a player id
+
+Snapshots are keyed by `id`, so changing an id would normally orphan that
+player's history. Record the old id in the optional `formerIds` map and the
+fetcher rewrites the stored snapshots to the new id on the next run, so history
+follows the rename with no reset and no extra API calls:
+
+```json
+{
+  "players": [
+    { "id": "beeba", "name": "Beeba", "chessCom": "unlikelyeffect" }
+  ],
+  "formerIds": {
+    "beeba": ["unlikelyeffect"]
+  }
+}
+```
+
+Changing only `name` does not need `formerIds`. Use it only when the `id`
+changes. Invalid entries (a former id that is still live, a current id that does
+not exist, an id claimed twice) are ignored with a warning rather than failing
+the daily run.
 
 ## Gist configuration
 
