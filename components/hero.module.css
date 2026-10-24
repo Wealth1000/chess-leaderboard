@@ -137,17 +137,17 @@
 
 .chaseScore {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  line-height: 1.05;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 6px;
   min-width: 0;
-  overflow: hidden;
 }
 
 .chaseRating {
   font-family: var(--display);
   font-size: 1.18rem;
-  text-align: right;
+  white-space: nowrap;
 }
 
 .chaseScore :global(.kac9Xq_badge) {
