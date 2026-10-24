@@ -140,11 +140,17 @@
   flex-direction: column;
   align-items: flex-end;
   line-height: 1.05;
+  min-width: 0;
 }
 
 .chaseRating {
   font-family: var(--display);
   font-size: 1.18rem;
+  text-align: right;
+}
+
+.chaseScore :global(.kac9Xq_badge) {
+  font-size: 0.85rem;
 }
 
 .chaseGap {
