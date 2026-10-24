@@ -37,7 +37,7 @@
 }
 
 .compact {
-  font-size: clamp(0.85rem, 1.6vw, 1.6rem);
+  font-size: clamp(0.7rem, 1.3vw, 1.3rem);
   gap: 0;
 }
 

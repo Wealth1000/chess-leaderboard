@@ -172,7 +172,7 @@
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: flex-end;
-  gap: 12px;
+  gap: 16px;
   width: 100%;
   margin-top: auto;
 }
