@@ -141,6 +141,7 @@
   align-items: flex-end;
   line-height: 1.05;
   min-width: 0;
+  overflow: hidden;
 }
 
 .chaseRating {
