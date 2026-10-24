@@ -134,13 +134,15 @@
     },
     {
       "id": "luciferoffx",
-      "name": "luciferoffx",
-      "chessCom": "luciferoffx"
+      "name": "lucifer",
+      "chessCom": "luciferoffx",
+      "lichess": "luciferoffx"
     },
     {
       "id": "nas-1",
-      "name": "NAS-1",
-      "chessCom": "nas-1"
+      "name": "NAS 1",
+      "chessCom": "nas-1",
+      "lichess": "nas_victory_1"
     },
     {
       "id": "newguy568",
@@ -224,7 +226,7 @@
     },
     {
       "id": "mawulikossimensah",
-      "name": "MawuliKossiMensah",
+      "name": "teamfrugal1",
       "chessCom": "mawuliKossiMensah",
       "lichess": "MawuliKossiMensah"
     },
@@ -295,8 +297,9 @@
     },
     {
       "id": "tim_okang",
-      "name": "tim_okang",
-      "chessCom": "tim_okang"
+      "name": "T!m¤th¥",
+      "chessCom": "tim_okang",
+      "lichess": "tim_okang"
     },
     {
       "id": "bestgabby",
@@ -310,7 +313,7 @@
     },
     {
       "id": "brightbravo",
-      "name": "BrightBravo",
+      "name": "for_sonbright",
       "chessCom": "brightbravo"
     },
     {
