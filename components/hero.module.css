@@ -140,7 +140,7 @@
   flex-direction: row;
   align-items: baseline;
   justify-content: flex-end;
-  gap: 8px;
+  gap: 12px;
   min-width: 0;
 }
 
