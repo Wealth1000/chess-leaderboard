@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Build output
+.next/
+out/
+
+# TypeScript build info
+*.tsbuildinfo
+
+# pnpm
+pnpm-debug.log*
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+
+# Snapshots are stored in a GitHub Gist; the player list is committed
+data/snapshots.json
+
+# Local planning/verification artifacts
+.scratch/

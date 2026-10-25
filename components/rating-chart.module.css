@@ -1,0 +1,71 @@
+.chartContainer {
+  position: relative;
+  height: 250px;
+}
+
+.firstSnapshot {
+  padding-top: 2px;
+}
+
+.ghostLine {
+  position: relative;
+  height: 66px;
+  margin-bottom: 16px;
+}
+
+.ghostLine::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 0;
+  left: 0;
+  border-top: 1px dashed rgba(20, 35, 29, 0.26);
+}
+
+.ghostLine::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 5px rgba(224, 82, 44, 0.16);
+  transform: translateY(-50%);
+}
+
+.firstSnapshot p {
+  max-width: 48ch;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.firstSnapshot p strong {
+  color: var(--ink);
+}
+
+.platformChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.chip {
+  padding: 5px 9px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.57rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 700px) {
+  .chartContainer {
+    height: 220px;
+  }
+}
