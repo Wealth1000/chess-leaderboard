@@ -17,7 +17,7 @@ export default function ClosedSite() {
       title: "Site suggestion",
       body,
     });
-    window.open(`${REPO_ISSUES_URL}?${params.toString()}`, "_blank", "noopener,noreferrer");
+    window.location.href = `${REPO_ISSUES_URL}?${params.toString()}`;
   };
 
   return (
@@ -49,7 +49,7 @@ export default function ClosedSite() {
               Submit suggestion
             </button>
             <p className={styles.hint}>
-              Submitting will open a pre-filled GitHub issue in a new tab.
+              Submitting will open a pre-filled GitHub issue.
             </p>
           </form>
         </section>
