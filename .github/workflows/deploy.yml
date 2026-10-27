@@ -39,6 +39,7 @@ jobs:
         run: pnpm build
         env:
           NEXT_PUBLIC_BASE_PATH: /chess-leaderboard
+          NEXT_PUBLIC_SITE_CLOSED: "true"
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
