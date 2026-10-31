@@ -39,10 +39,6 @@ export type Snapshot = {
   chessComExtras?: ChessComExtras | null;
 };
 
-export type SnapshotFile = {
-  snapshots: Snapshot[];
-};
-
 /**
  * How the rankings are presented. Presentation-only: the same ranking drives
  * both the board and the list, so `layout` never influences the ratings model.

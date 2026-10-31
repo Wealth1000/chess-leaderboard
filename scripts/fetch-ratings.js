@@ -154,15 +154,6 @@ function parseLichessStats(stats) {
   return { ratings, gamesPlayed };
 }
 
-function buildAccountRatings(username, platform, ratings) {
-  return CATEGORIES.map(category => ({
-    username,
-    platform,
-    category,
-    rating: isNumber(ratings[category]) ? ratings[category] : null
-  }));
-}
-
 // A category is "v2" when its entry carries an `accounts` object. The document
 // may legitimately mix shapes during the transition, so every reader detects the
 // shape per entry rather than trusting the document-level `version`.
@@ -594,7 +585,6 @@ module.exports = {
   CHESSCOM_SOURCES,
   parseChessComStats,
   parseLichessStats,
-  buildAccountRatings,
   mergeSnapshots,
   buildFormerIdMap,
   remapFormerIds,
