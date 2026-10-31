@@ -4,7 +4,7 @@
   justify-content: space-between;
   gap: 24px;
   padding: 26px 0;
-  border-bottom: 1px solid var(--line-light);
+  border-bottom: 1px solid var(--line);
 }
 
 .brand {
@@ -19,10 +19,10 @@
   width: 44px;
   height: 44px;
   flex: 0 0 auto;
-  background-color: var(--buff);
+  background-color: var(--board-light);
   background-image:
-    linear-gradient(45deg, var(--green-900) 25%, transparent 25%, transparent 75%, var(--green-900) 75%),
-    linear-gradient(45deg, var(--green-900) 25%, transparent 25%, transparent 75%, var(--green-900) 75%);
+    linear-gradient(45deg, var(--board-dark) 25%, transparent 25%, transparent 75%, var(--board-dark) 75%),
+    linear-gradient(45deg, var(--board-dark) 25%, transparent 25%, transparent 75%, var(--board-dark) 75%);
   background-size: 22px 22px;
   background-position: 0 0, 11px 11px;
 }
@@ -43,7 +43,7 @@
 }
 
 .brandSub {
-  color: rgba(244, 236, 217, 0.64);
+  color: var(--ink-muted);
   font-size: 0.76rem;
 }
 
@@ -57,7 +57,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  color: rgba(244, 236, 217, 0.66);
+  color: var(--ink-muted);
   font-family: var(--mono);
   font-size: 0.64rem;
   letter-spacing: 0.12em;
@@ -66,7 +66,7 @@
 }
 
 .meta time {
-  color: var(--buff);
+  color: var(--ink);
   font-weight: 700;
 }
 
@@ -75,7 +75,7 @@
   height: 8px;
   border-radius: 50%;
   background: var(--accent);
-  box-shadow: 0 0 0 4px rgba(224, 82, 44, 0.16);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 16%, transparent);
 }
 
 @media (max-width: 700px) {

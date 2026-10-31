@@ -19,7 +19,7 @@
   top: 50%;
   right: 0;
   left: 0;
-  border-top: 1px dashed rgba(20, 35, 29, 0.26);
+  border-top: 1px dashed color-mix(in srgb, var(--ink) 26%, transparent);
 }
 
 .ghostLine::after {
@@ -31,14 +31,14 @@
   height: 13px;
   border-radius: 50%;
   background: var(--accent);
-  box-shadow: 0 0 0 5px rgba(224, 82, 44, 0.16);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent-strong) 16%, transparent);
   transform: translateY(-50%);
 }
 
 .firstSnapshot p {
   max-width: 48ch;
   margin: 0;
-  color: var(--muted);
+  color: var(--ink-muted);
   font-size: 0.9rem;
   line-height: 1.55;
 }
@@ -57,7 +57,7 @@
 .chip {
   padding: 5px 9px;
   border: 1px solid var(--line);
-  color: var(--muted);
+  color: var(--ink-muted);
   font-family: var(--mono);
   font-size: 0.57rem;
   letter-spacing: 0.08em;
