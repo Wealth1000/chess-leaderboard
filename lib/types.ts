@@ -18,6 +18,12 @@ export type PlayerRating = {
   platform: Platform;
   category: Category;
   rating: number | null;
+  /**
+   * Cumulative games played for this category, when the platform reports it.
+   * Omitted entirely (never defaulted to 0) when no count is known, so
+   * v1-derived and pre-change snapshots stay valid.
+   */
+  gamesPlayed?: number;
 };
 
 export type ChessComExtras = {
@@ -80,3 +86,54 @@ export type LeaderboardModel = {
 };
 
 export type SnapshotStatus = "loading" | "ready" | "warning";
+
+/**
+ * Storage-only types. These describe the compact shape written to the gist and
+ * are never consumed by the UI; `decodeSnapshotDocument` maps them onto the
+ * domain `Snapshot`. See `docs/specs/2026-10-31-snapshot-format-v2.md`.
+ */
+
+/** Ratings for one account in the compact v2 shape; `null` means unplayed. */
+export type StoredRatingsMap = Partial<Record<Category, number>>;
+
+/** A single account entry nested under a v2 snapshot's `accounts` map. */
+export type StoredAccountEntry = {
+  username: string;
+  /** Categories with a real value. Categories in neither map emit no entry. */
+  ratings?: StoredRatingsMap;
+  /** Categories known to be unavailable, distinct from "no data". */
+  unplayed?: Category[];
+  /** Cumulative games per category; puzzle is never included. */
+  gamesPlayed?: Partial<Record<Category, number>>;
+};
+
+/**
+ * A v2 stored snapshot: identity + a map of platform accounts. Legacy v1
+ * entries have a top-level `ratings` array instead and are never rewritten.
+ */
+export type StoredSnapshotV2 = {
+  playerId: string;
+  date: string;
+  accounts: Partial<Record<Platform, StoredAccountEntry>>;
+  chessComExtras?: ChessComExtras | null;
+};
+
+/** A legacy v1 stored snapshot, preserved verbatim. */
+export type StoredSnapshotV1 = {
+  playerId: string;
+  playerName?: string;
+  date: string;
+  ratings: PlayerRating[];
+  chessComExtras?: ChessComExtras | null;
+};
+
+export type StoredSnapshot = StoredSnapshotV1 | StoredSnapshotV2;
+
+/**
+ * The versioned document as it lives on disk. `version` is optional: a missing
+ * version means v1. Unknown future versions are rejected by the decoder.
+ */
+export type SnapshotDocument = {
+  version?: number;
+  snapshots: StoredSnapshot[];
+};
