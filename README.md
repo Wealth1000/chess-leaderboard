@@ -129,8 +129,9 @@ focus and small accent text.
    the list is imported at build time.
 2. **Daily snapshots**: `.github/workflows/daily-update.yml` runs
    `scripts/fetch-ratings.js` every day at 09:00 UTC and writes the results to a
-   GitHub Gist. Each account gets all five category entries. Re-running on the
-   same day replaces that day's snapshots instead of skipping the run.
+   GitHub Gist. Each account records its five category outcomes (a rating, or
+   `unplayed`). Re-running on the same day replaces that day's snapshots instead
+   of skipping the run.
 3. **Live ratings**: On page load, `hooks/use-snapshots.ts` fetches the gist and
    the view model ranks the latest snapshot for the selected platform and
    category. A failed fetch leaves the player list usable and shows a data
@@ -162,31 +163,69 @@ Rules:
 - A `null` rating and a missing rating both mean unavailable, never zero.
 - Chess.com usernames are lowercased in API requests.
 
-Each account emits five rating entries in the gist:
+The gist holds a **versioned document**: a `version` field plus a `snapshots`
+array. A missing `version` means v1 (the pre-v2 format). The fetcher writes
+`version: 2`; the file is minified (`JSON.stringify` with no indentation or
+surrounding whitespace) to keep the payload small on page load, since the
+browser fetches it on every visit.
 
-```json
+Each member emits one v2 snapshot entry, and each account is a compact record
+inside `accounts`:
+
+```jsonc
 {
-  "playerId": "wealth",
-  "playerName": "Wealth",
-  "date": "2026-10-22",
-  "ratings": [
+  "version": 2,
+  "snapshots": [
     {
-      "username": "wealth98981",
-      "platform": "chess.com",
-      "category": "rapid",
-      "rating": 1300
+      "playerId": "wealth",
+      "date": "2026-10-31",
+      "accounts": {
+        "chess.com": {
+          "username": "wealth98981",
+          "ratings": { "rapid": 1300 },
+          "unplayed": ["puzzle"],
+          "gamesPlayed": { "rapid": 3712 }
+        }
+      },
+      "chessComExtras": { "tacticsHigh": 1800, "puzzleRushBest": 32 }
     }
-  ],
-  "chessComExtras": {
-    "tacticsHigh": 1800,
-    "puzzleRushBest": 32
-  }
+  ]
 }
 ```
 
-The example shows one entry for brevity; a real account includes `rapid`,
-`classical`, `blitz`, `bullet`, and `puzzle`. `chessComExtras` is present only
-for players with a Chess.com account. Lichess-only snapshots omit it.
+The example shows one rating for brevity; a real account includes `rapid`,
+`classical`, `blitz`, and `bullet` (and `puzzle` for Lichess), each either in
+`ratings` with a numeric value or in `unplayed`. `chessComExtras` is present only
+for players with a Chess.com account; Lichess-only snapshots omit it.
+
+Fields worth knowing:
+
+- **`username`** lives inside each account record and is the identity gate. It is
+  never deduplicated away, so a member can never inherit another account's
+  ratings.
+- **`unplayed`** lists categories where the account exists but the value is
+  unavailable (rendered "Not played" / "Not published"). A category in neither
+  `ratings` nor `unplayed` means no data and renders "—". The three-way
+  played / unplayed / absent distinction is load-bearing and preserved on read.
+- **`gamesPlayed`** maps a category to a cumulative game count. It is omitted
+  entirely when no count is known (never defaulted to `0`), and **puzzle is never
+  included**, on either platform. Counts are stored now so a future games-based
+  feature can be derived from existing history rather than only from data
+  collected after it ships.
+- **`playerName` is dropped.** Nothing reads it; display names come from
+  `data/players.json`.
+
+Legacy entries are never rewritten. A v1 entry (a top-level `ratings` array, no
+`accounts`) is preserved verbatim in the file and upgraded at read time, so
+during the transition the document may legitimately hold a **mix** of v1 and v2
+entries. Every reader detects the shape per entry, not from the document-level
+`version`.
+
+### Rollback
+
+The site reads both formats, so reverting a deploy to the previous version is
+safe: it still decodes the v1 entries and ignores what it does not recognise.
+History is never at risk, and no migration step is needed in either direction.
 
 ## Resetting snapshots
 
