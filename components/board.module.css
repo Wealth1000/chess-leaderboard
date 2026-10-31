@@ -12,7 +12,7 @@
 
 .sectionHead h2 {
   margin: 0;
-  color: var(--buff);
+  color: var(--ink);
   font-family: var(--display);
   font-size: clamp(2rem, 4.2vw, 3.5rem);
   font-weight: 400;
@@ -28,6 +28,44 @@
   padding-bottom: 4px;
 }
 
+.layoutSwitch {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 4px;
+}
+
+.layoutOption {
+  padding: 8px 10px 7px;
+  border: 1px solid var(--line-strong);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink-muted);
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 0.57rem;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  text-transform: uppercase;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.layoutOption:hover {
+  border-color: var(--ink-muted);
+  background: color-mix(in srgb, var(--ink) 8%, transparent);
+  color: var(--ink);
+}
+
+.layoutOption:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.layoutOption[aria-pressed="true"] {
+  border-color: var(--accent-strong);
+  background: var(--accent-strong);
+  color: var(--page);
+}
+
 .searchWrap {
   flex: 0 0 auto;
 }
@@ -35,26 +73,26 @@
 .searchWrap input {
   width: 248px;
   padding: 11px 13px;
-  border: 1px solid rgba(244, 236, 217, 0.28);
+  border: 1px solid var(--line-strong);
   border-radius: 0;
   outline: none;
-  background: transparent;
-  color: var(--buff);
+  background: var(--surface);
+  color: var(--ink);
   font-size: 0.88rem;
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .searchWrap input::placeholder {
-  color: rgba(244, 236, 217, 0.56);
+  color: var(--ink-muted);
 }
 
 .searchWrap input:focus {
-  border-color: var(--accent);
-  background: rgba(244, 236, 217, 0.06);
+  border-color: var(--accent-strong);
+  background: color-mix(in srgb, var(--ink) 4%, var(--surface));
 }
 
 .boardCount {
-  color: rgba(244, 236, 217, 0.6);
+  color: var(--ink-muted);
   font-family: var(--mono);
   font-size: 0.61rem;
   letter-spacing: 0.09em;
@@ -65,9 +103,10 @@
 .board {
   display: grid;
   grid-template-columns: repeat(8, minmax(0, 1fr));
-  border: 8px solid var(--buff);
-  background: var(--buff);
-  box-shadow: 0 34px 70px rgba(0, 0, 0, 0.3);
+  border: 8px solid var(--board-light);
+  background: var(--board-light);
+  outline: 1px solid var(--ink);
+  box-shadow: var(--shadow-board);
 }
 
 .tile {
@@ -89,25 +128,25 @@
 .tileLight {
   --change-up: #17603f;
   --change-down: #a53016;
-  --change-neutral: rgba(20, 35, 29, 0.58);
-  background: var(--buff);
+  --change-neutral: color-mix(in srgb, var(--ink) 58%, transparent);
+  background: var(--board-light);
   color: var(--ink);
 }
 
 .tileDark {
   --change-up: #8fe0b6;
   --change-down: #ffb09a;
-  --change-neutral: rgba(244, 236, 217, 0.64);
-  background: var(--green-800);
-  color: var(--buff);
+  --change-neutral: color-mix(in srgb, var(--board-light) 64%, transparent);
+  background: var(--board-dark);
+  color: var(--board-light);
 }
 
 .tileLeader {
   --change-up: #a9f0c9;
   --change-down: #ffd3c4;
-  --change-neutral: rgba(244, 236, 217, 0.72);
-  background: var(--accent-deep);
-  color: var(--buff);
+  --change-neutral: color-mix(in srgb, var(--board-light) 72%, transparent);
+  background: var(--accent-strong);
+  color: var(--page);
 }
 
 .tilePodium {
@@ -121,11 +160,11 @@
 }
 
 .tileLeader:hover {
-  outline-color: var(--buff);
+  outline-color: var(--board-light);
 }
 
 .tile:focus-visible {
-  outline: 3px solid var(--gold);
+  outline: 3px solid var(--focus-ring);
   outline-offset: -3px;
   z-index: 2;
 }
@@ -198,13 +237,13 @@
 }
 
 .tileOpen.tileLight {
-  background: var(--buff-deep);
-  color: rgba(20, 35, 29, 0.58);
+  background: var(--surface-sunken);
+  color: color-mix(in srgb, var(--ink) 58%, transparent);
 }
 
 .tileOpen.tileDark {
-  background: var(--green-800);
-  color: rgba(244, 236, 217, 0.58);
+  background: var(--board-dark);
+  color: color-mix(in srgb, var(--board-light) 58%, transparent);
 }
 
 .tileOpen::after {
@@ -237,8 +276,8 @@
   min-height: 190px;
   place-items: center;
   padding: 32px;
-  background: var(--buff);
-  color: var(--muted);
+  background: var(--board-light);
+  color: var(--ink-muted);
   font-size: 0.95rem;
   text-align: center;
 }
@@ -250,12 +289,22 @@
   font-size: 1.05rem;
 }
 
+.listMessage {
+  margin: 0;
+  padding: 34px 24px;
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  color: var(--ink-muted);
+  font-size: 0.92rem;
+  text-align: center;
+}
+
 .boardFoot {
   display: flex;
   justify-content: space-between;
   gap: 24px;
   padding: 14px 0 0;
-  color: rgba(244, 236, 217, 0.54);
+  color: var(--ink-muted);
   font-size: 0.76rem;
 }
 
@@ -275,8 +324,8 @@
   margin: 0 0 14px;
   padding: 10px 14px;
   border-left: 3px solid var(--gold);
-  background: rgba(244, 236, 217, 0.06);
-  color: rgba(244, 236, 217, 0.72);
+  background: color-mix(in srgb, var(--ink) 5%, transparent);
+  color: var(--ink-muted);
   font-size: 0.78rem;
   line-height: 1.45;
 }
@@ -284,8 +333,8 @@
 .dataNotice {
   margin: 16px 0 0;
   padding: 12px 15px;
-  border: 1px solid rgba(224, 82, 44, 0.55);
-  color: var(--buff);
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  color: var(--ink);
   font-size: 0.82rem;
 }
 

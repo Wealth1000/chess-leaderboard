@@ -9,15 +9,24 @@ import {
 } from "@/lib/format";
 import { BOARD_SQUARES, getSeatInfo } from "@/lib/leaderboard";
 import type { RatingsViewModel } from "@/lib/ratings-view";
+import type { Layout } from "@/lib/types";
 import ChangeBadge, { changeLabel } from "./change-badge";
+import PlayerTable from "./player-table";
 import styles from "./board.module.css";
 
 type ClubBoardProps = {
   model: RatingsViewModel;
   loading: boolean;
   warning: boolean;
+  layout: Layout;
+  onLayoutChange: (layout: Layout) => void;
   onSelect: (playerId: string) => void;
 };
+
+const LAYOUT_OPTIONS: { value: Layout; label: string }[] = [
+  { value: "board", label: "Board" },
+  { value: "list", label: "List" },
+];
 
 function initialTileClass(index: number) {
   const row = Math.floor(index / 8);
@@ -29,6 +38,8 @@ export default function ClubBoard({
   model,
   loading,
   warning,
+  layout,
+  onLayoutChange,
   onSelect,
 }: ClubBoardProps) {
   const platformName = platformLabel(model.platform);
@@ -72,7 +83,7 @@ export default function ClubBoard({
   useEffect(() => {
     const frame = requestAnimationFrame(applyParity);
     return () => cancelAnimationFrame(frame);
-  }, [applyParity, visiblePlayers]);
+  }, [applyParity, visiblePlayers, layout]);
 
   useEffect(() => {
     const board = boardRef.current;
@@ -81,7 +92,7 @@ export default function ClubBoard({
     const observer = new ResizeObserver(applyParity);
     observer.observe(board);
     return () => observer.disconnect();
-  }, [applyParity]);
+  }, [applyParity, layout]);
 
   let countLabel = `${model.ranked.length} players`;
   if (loading) countLabel = "Loading…";
@@ -116,6 +127,23 @@ export default function ClubBoard({
           <h2 id="board-heading">Every player, ranked.</h2>
         </div>
         <div className={styles.boardTools}>
+          <div
+            className={styles.layoutSwitch}
+            role="group"
+            aria-label="Ranking view"
+          >
+            {LAYOUT_OPTIONS.map((option) => (
+              <button
+                type="button"
+                className={styles.layoutOption}
+                key={option.value}
+                aria-pressed={layout === option.value}
+                onClick={() => onLayoutChange(option.value)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
           <div className={styles.searchWrap}>
             <label htmlFor="player-search" className="sr-only">
               Search players
@@ -130,7 +158,9 @@ export default function ClubBoard({
               onChange={(event) => setQuery(event.target.value)}
             />
           </div>
-          <span className={styles.boardCount}>{countLabel}</span>
+          <span className={styles.boardCount} aria-live="polite">
+            {countLabel}
+          </span>
         </div>
       </div>
 
@@ -141,7 +171,27 @@ export default function ClubBoard({
         </p>
       ) : null}
 
-      <div className={styles.board} id="board" ref={boardRef} aria-live="polite">
+      {layout === "list" ? (
+        <div id="board">
+          {loading ? (
+            <p className={styles.listMessage}>Reading the list…</p>
+          ) : (
+            <PlayerTable
+              players={visiblePlayers}
+              platform={model.platform}
+              category={model.category}
+              range={model.range}
+              query={query.trim()}
+              onSelect={onSelect}
+            />
+          )}
+        </div>
+      ) : (
+        <div
+          className={styles.board}
+          id="board"
+          ref={boardRef}
+        >
         {loading ? (
           <div className={styles.boardMessage}>Reading the board…</div>
         ) : visiblePlayers.length === 0 ? (
@@ -237,10 +287,15 @@ export default function ClubBoard({
               )}
           </>
         )}
-      </div>
+        </div>
+      )}
 
       <div className={styles.boardFoot}>
-        <p>Click any square for a player scorecard and rating history.</p>
+        <p>
+          {layout === "list"
+            ? "Select a player for their scorecard and rating history."
+            : "Click any square for a player scorecard and rating history."}
+        </p>
         <p className={styles.seatNote}>{loading ? "—" : seats.note}</p>
       </div>
 

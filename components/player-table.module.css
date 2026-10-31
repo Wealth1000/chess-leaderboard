@@ -1,0 +1,200 @@
+.wrap {
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 11px 14px 9px;
+  border-bottom: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink-muted);
+  font-family: var(--mono);
+  font-size: 0.57rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.rankHead {
+  width: 3.4rem;
+}
+
+.numHead {
+  width: 6.4rem;
+  text-align: right;
+  white-space: normal;
+}
+
+.row {
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.row:hover,
+.row:focus-within {
+  background: color-mix(in srgb, var(--ink) 5%, transparent);
+}
+
+.row td {
+  height: 50px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+
+.rank {
+  color: var(--ink-muted);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.rankPodium {
+  color: var(--accent-strong);
+}
+
+.playerCell {
+  min-width: 0;
+}
+
+.nameButton {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  min-width: 0;
+  padding: 4px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.nameButton:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.name {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.handle {
+  overflow: hidden;
+  color: var(--ink-muted);
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.05em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rating {
+  color: var(--ink);
+  font-family: var(--display);
+  font-size: 1.24rem;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.change {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* The badge sets its own font size; a child selector outranks it so the list
+   stays at row density instead of the hero-sized scorecard scale. */
+.change > span {
+  font-size: 1.02rem;
+}
+
+.divider {
+  padding: 9px 14px 8px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-sunken);
+  color: var(--ink-muted);
+  font-family: var(--mono);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.empty {
+  padding: 36px 24px;
+  color: var(--ink-muted);
+  font-size: 0.92rem;
+  text-align: center;
+}
+
+.empty strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--ink);
+  font-size: 1.02rem;
+}
+
+@media (max-width: 700px) {
+  .table thead th {
+    padding: 10px 10px 8px;
+  }
+
+  .numHead {
+    width: 4.9rem;
+  }
+
+  .row td {
+    height: 48px;
+    padding: 7px 10px;
+  }
+
+  .divider {
+    padding: 8px 10px 7px;
+  }
+
+  .rating {
+    font-size: 1.08rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .handle {
+    display: none;
+  }
+
+  .nameButton {
+    padding: 8px 0;
+  }
+
+  .rankHead {
+    width: 2.9rem;
+  }
+
+  .name {
+    font-size: 0.86rem;
+  }
+}

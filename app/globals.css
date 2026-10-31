@@ -1,16 +1,37 @@
 :root {
-  --green-950: #071d17;
-  --green-900: #0b2b22;
-  --green-800: #123d30;
-  --buff: #f4ecd9;
-  --buff-deep: #e9ddc4;
+  /* Tournament paper semantic tokens */
+  --page: #f6eedc;
+  --surface: #fcf7ea;
+  --surface-sunken: #efe6d2;
   --ink: #14231d;
-  --muted: #5d6c60;
+  --ink-muted: #5d6c60;
+  --line: color-mix(in srgb, var(--ink) 16%, transparent);
+  --line-strong: color-mix(in srgb, var(--ink) 32%, transparent);
   --accent: #e0522c;
-  --accent-deep: #b23b1e;
-  --gold: #d9a441;
-  --line: rgba(20, 35, 29, 0.16);
-  --line-light: rgba(244, 236, 217, 0.18);
+  --accent-strong: #b23b1e;
+  --gold: #c08a2c;
+  --board-light: #f4ecd9;
+  --board-dark: #123d30;
+  --focus-ring: var(--accent-strong);
+  --shadow-card: 0 18px 40px color-mix(in srgb, var(--ink) 12%, transparent);
+  --shadow-board: 0 26px 56px color-mix(in srgb, var(--ink) 18%, transparent);
+
+  /* Chart tokens */
+  --chart-tooltip-bg: var(--ink);
+  --chart-tooltip-text: var(--page);
+  --chart-tick: var(--ink-muted);
+  --chart-grid: color-mix(in srgb, var(--ink) 12%, transparent);
+  --chart-axis: color-mix(in srgb, var(--ink) 22%, transparent);
+  --chart-point-border: var(--surface);
+  --chart-field: color-mix(in srgb, var(--ink) 26%, transparent);
+  --chart-peer: color-mix(in srgb, var(--ink) 38%, transparent);
+  --chart-band: color-mix(in srgb, #2f6b54 14%, transparent);
+  --chart-series-1: #b23b1e;
+  --chart-series-2: #2f6b54;
+  --chart-series-3: #96661a;
+  --chart-series-4: #28516b;
+  --chart-series-5: #7a3b62;
+
   --display: var(--font-anton), "Arial Narrow", sans-serif;
   --mono: var(--font-space-mono), "Courier New", monospace;
   --body: var(--font-dm-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -30,9 +51,9 @@ body {
   margin: 0;
   min-height: 100vh;
   background:
-    radial-gradient(1100px 560px at 50% -140px, rgba(244, 236, 217, 0.07), transparent 70%),
-    var(--green-900);
-  color: var(--buff);
+    radial-gradient(1100px 560px at 50% -140px, color-mix(in srgb, #ffffff 55%, transparent), transparent 70%),
+    var(--page);
+  color: var(--ink);
   font-family: var(--body);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -63,7 +84,7 @@ button {
   align-items: center;
   gap: 9px;
   margin: 0 0 14px;
-  color: var(--muted);
+  color: var(--ink-muted);
   font-family: var(--mono);
   font-size: 0.64rem;
   font-weight: 700;
@@ -80,7 +101,7 @@ button {
 }
 
 .eyebrowLight {
-  color: rgba(244, 236, 217, 0.62);
+  color: var(--ink-muted);
 }
 
 @media (prefers-reduced-motion: reduce) {

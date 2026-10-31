@@ -17,6 +17,7 @@ export const DEFAULT_VIEW_STATE: ViewState = {
   category: "rapid",
   range: "7d",
   focusPlayerId: null,
+  layout: "board",
 };
 
 export const MAIN_CATEGORIES: MainCategory[] = [

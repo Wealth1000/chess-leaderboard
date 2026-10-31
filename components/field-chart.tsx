@@ -15,10 +15,29 @@ import type { Player, RatingChange } from "@/lib/types";
 import ChangeBadge from "./change-badge";
 import styles from "./field-chart.module.css";
 
-const TOP_COLORS = ["#b23b1e", "#2f6b54", "#c58b1e", "#28516b", "#7a3b62"];
-const FIELD_COLOR = "rgba(20, 35, 29, 0.22)";
-const PEER_COLOR = "rgba(20, 35, 29, 0.34)";
-const BAND_COLOR = "rgba(47, 107, 84, 0.14)";
+const TOP_SERIES_TOKENS = [
+  "--chart-series-1",
+  "--chart-series-2",
+  "--chart-series-3",
+  "--chart-series-4",
+  "--chart-series-5",
+] as const;
+
+const TOP_SERIES_FALLBACKS = [
+  "#b23b1e",
+  "#2f6b54",
+  "#96661a",
+  "#28516b",
+  "#7a3b62",
+] as const;
+
+function readColorToken(
+  style: CSSStyleDeclaration,
+  name: string,
+  fallback: string,
+) {
+  return style.getPropertyValue(name).trim() || fallback;
+}
 
 type ChartMode = "field" | "focus";
 
@@ -110,6 +129,46 @@ export default function FieldChart({
         rootStyle.getPropertyValue("--mono").trim() || "monospace";
       const bodyFont =
         rootStyle.getPropertyValue("--body").trim() || "sans-serif";
+      const tooltipBg = readColorToken(rootStyle, "--chart-tooltip-bg", "#14231d");
+      const tooltipText = readColorToken(
+        rootStyle,
+        "--chart-tooltip-text",
+        "#f6eedc",
+      );
+      const tickColor = readColorToken(rootStyle, "--chart-tick", "#5d6c60");
+      const gridColor = readColorToken(
+        rootStyle,
+        "--chart-grid",
+        "rgba(20, 35, 29, 0.12)",
+      );
+      const axisColor = readColorToken(
+        rootStyle,
+        "--chart-axis",
+        "rgba(20, 35, 29, 0.22)",
+      );
+      const pointBorderColor = readColorToken(
+        rootStyle,
+        "--chart-point-border",
+        "#fcf7ea",
+      );
+      const fieldColor = readColorToken(
+        rootStyle,
+        "--chart-field",
+        "rgba(20, 35, 29, 0.26)",
+      );
+      const peerColor = readColorToken(
+        rootStyle,
+        "--chart-peer",
+        "rgba(20, 35, 29, 0.38)",
+      );
+      const bandColor = readColorToken(
+        rootStyle,
+        "--chart-band",
+        "rgba(47, 107, 84, 0.14)",
+      );
+      const topColors = TOP_SERIES_TOKENS.map((token, index) =>
+        readColorToken(rootStyle, token, TOP_SERIES_FALLBACKS[index]),
+      );
       const reducedMotion = window.matchMedia(
         "(prefers-reduced-motion: reduce)",
       ).matches;
@@ -140,7 +199,7 @@ export default function FieldChart({
                 label: "Peer range",
                 data: dates.map((date) => bandByDate.get(date)?.max ?? null),
                 borderColor: "transparent",
-                backgroundColor: BAND_COLOR,
+                backgroundColor: bandColor,
                 pointRadius: 0,
                 pointHoverRadius: 0,
                 fill: "-1",
@@ -151,13 +210,13 @@ export default function FieldChart({
                 return {
                   label: series.playerName,
                   data: dates.map((date) => points.get(date) ?? null),
-                  borderColor: PEER_COLOR,
-                  backgroundColor: PEER_COLOR,
+                  borderColor: peerColor,
+                  backgroundColor: peerColor,
                   borderWidth: 1.1,
                   pointRadius: 0,
                   pointHoverRadius: 4,
-                  pointBackgroundColor: PEER_COLOR,
-                  pointBorderColor: "#f4ecd9",
+                  pointBackgroundColor: peerColor,
+                  pointBorderColor,
                   pointBorderWidth: 1,
                   tension: 0.22,
                   spanGaps: true,
@@ -168,13 +227,13 @@ export default function FieldChart({
               {
                 label: `${focus.playerName} (focused)`,
                 data: dates.map((date) => focusPoints.get(date) ?? null),
-                borderColor: "#b23b1e",
-                backgroundColor: "#b23b1e",
+                borderColor: topColors[0],
+                backgroundColor: topColors[0],
                 borderWidth: 3,
                 pointRadius: 3.5,
                 pointHoverRadius: 6,
-                pointBackgroundColor: "#b23b1e",
-                pointBorderColor: "#f4ecd9",
+                pointBackgroundColor: topColors[0],
+                pointBorderColor,
                 pointBorderWidth: 1.5,
                 tension: 0.24,
                 spanGaps: true,
@@ -191,9 +250,9 @@ export default function FieldChart({
             plugins: {
               legend: { display: false },
               tooltip: {
-                backgroundColor: "#14231d",
-                titleColor: "#f4ecd9",
-                bodyColor: "#f4ecd9",
+                backgroundColor: tooltipBg,
+                titleColor: tooltipText,
+                bodyColor: tooltipText,
                 padding: 10,
                 titleFont: { family: monoFont, size: 10 },
                 bodyFont: { family: bodyFont, size: 12 },
@@ -213,9 +272,9 @@ export default function FieldChart({
             scales: {
               x: {
                 grid: { display: false },
-                border: { color: "rgba(20, 35, 29, 0.22)" },
+                border: { color: axisColor },
                 ticks: {
-                  color: "#5d6c60",
+                  color: tickColor,
                   maxRotation: 0,
                   autoSkip: true,
                   maxTicksLimit: 8,
@@ -225,15 +284,15 @@ export default function FieldChart({
               y: {
                 beginAtZero: false,
                 border: { display: false },
-                grid: { color: "rgba(20, 35, 29, 0.12)" },
+                grid: { color: gridColor },
                 title: {
                   display: true,
                   text: `${categoryName} rating change (points)`,
-                  color: "#5d6c60",
+                  color: tickColor,
                   font: { family: monoFont, size: 9 },
                 },
                 ticks: {
-                  color: "#5d6c60",
+                  color: tickColor,
                   precision: 0,
                   callback: (value) => signed(Number(value)),
                   font: { family: monoFont, size: 9 },
@@ -258,7 +317,7 @@ export default function FieldChart({
                 (entry) => entry.playerId === series.playerId,
               );
               const isTop = topIds.has(series.playerId);
-              const color = topIndex >= 0 ? TOP_COLORS[topIndex] : FIELD_COLOR;
+              const color = topIndex >= 0 ? topColors[topIndex] : fieldColor;
 
               return {
                 label: series.playerName,
@@ -269,7 +328,7 @@ export default function FieldChart({
                 pointRadius: hasHistory ? (isTop ? 3 : 0) : isTop ? 4 : 2.5,
                 pointHoverRadius: 6,
                 pointBackgroundColor: color,
-                pointBorderColor: "#f4ecd9",
+                pointBorderColor,
                 pointBorderWidth: isTop ? 1.5 : 1,
                 tension: 0.24,
                 spanGaps: true,
@@ -285,9 +344,9 @@ export default function FieldChart({
             plugins: {
               legend: { display: false },
               tooltip: {
-                backgroundColor: "#14231d",
-                titleColor: "#f4ecd9",
-                bodyColor: "#f4ecd9",
+                backgroundColor: tooltipBg,
+                titleColor: tooltipText,
+                bodyColor: tooltipText,
                 padding: 10,
                 titleFont: { family: monoFont, size: 10 },
                 bodyFont: { family: bodyFont, size: 12 },
@@ -302,9 +361,9 @@ export default function FieldChart({
             scales: {
               x: {
                 grid: { display: false },
-                border: { color: "rgba(20, 35, 29, 0.22)" },
+                border: { color: axisColor },
                 ticks: {
-                  color: "#5d6c60",
+                  color: tickColor,
                   maxRotation: 0,
                   autoSkip: true,
                   maxTicksLimit: 8,
@@ -314,15 +373,15 @@ export default function FieldChart({
               y: {
                 beginAtZero: false,
                 border: { display: false },
-                grid: { color: "rgba(20, 35, 29, 0.12)" },
+                grid: { color: gridColor },
                 title: {
                   display: true,
                   text: `${categoryName} rating`,
-                  color: "#5d6c60",
+                  color: tickColor,
                   font: { family: monoFont, size: 9 },
                 },
                 ticks: {
-                  color: "#5d6c60",
+                  color: tickColor,
                   precision: 0,
                   font: { family: monoFont, size: 9 },
                 },
@@ -522,7 +581,7 @@ export default function FieldChart({
                   <span className={styles.legendItem} key={entry.playerId}>
                     <span
                       className={styles.swatch}
-                      style={{ background: TOP_COLORS[index] }}
+                      style={{ background: `var(${TOP_SERIES_TOKENS[index]})` }}
                       aria-hidden="true"
                     />
                     <span className={styles.legendRank}>{index + 1}</span>

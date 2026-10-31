@@ -5,7 +5,7 @@
   justify-content: space-between;
   gap: 16px 28px;
   padding: 14px 0 16px;
-  border-bottom: 1px solid var(--line-light);
+  border-bottom: 1px solid var(--line);
 }
 
 .groups {
@@ -24,7 +24,7 @@
 }
 
 .label {
-  color: rgba(244, 236, 217, 0.48);
+  color: var(--ink-muted);
   font-family: var(--mono);
   font-size: 0.55rem;
   letter-spacing: 0.12em;
@@ -40,10 +40,10 @@
 
 .option {
   padding: 8px 10px 7px;
-  border: 1px solid rgba(244, 236, 217, 0.24);
+  border: 1px solid var(--line-strong);
   border-radius: 0;
   background: transparent;
-  color: rgba(244, 236, 217, 0.7);
+  color: var(--ink);
   cursor: pointer;
   font-family: var(--mono);
   font-size: 0.57rem;
@@ -54,20 +54,20 @@
 }
 
 .option:hover {
-  border-color: rgba(244, 236, 217, 0.48);
-  background: rgba(244, 236, 217, 0.08);
-  color: var(--buff);
+  border-color: color-mix(in srgb, var(--ink) 48%, transparent);
+  background: color-mix(in srgb, var(--ink) 8%, transparent);
+  color: var(--ink);
 }
 
 .option:focus-visible {
-  outline: 2px solid var(--gold);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
 .option[aria-pressed="true"] {
-  border-color: var(--accent-deep);
-  background: var(--accent-deep);
-  color: var(--buff);
+  border-color: var(--accent-strong);
+  background: var(--accent-strong);
+  color: var(--page);
 }
 
 .focus {
@@ -82,7 +82,7 @@
 }
 
 .focusLabel {
-  color: rgba(244, 236, 217, 0.48);
+  color: var(--ink-muted);
   font-family: var(--mono);
   font-size: 0.53rem;
   letter-spacing: 0.1em;
@@ -92,7 +92,7 @@
 .focusName {
   max-width: 18ch;
   overflow: hidden;
-  color: var(--buff);
+  color: var(--ink);
   font-size: 0.82rem;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -101,10 +101,10 @@
 .clear {
   padding: 0;
   border: 0;
-  border-bottom: 1px solid rgba(244, 236, 217, 0.4);
+  border-bottom: 1px solid color-mix(in srgb, var(--ink) 40%, transparent);
   border-radius: 0;
   background: transparent;
-  color: rgba(244, 236, 217, 0.72);
+  color: var(--ink);
   cursor: pointer;
   font-family: var(--mono);
   font-size: 0.55rem;
@@ -113,12 +113,12 @@
 }
 
 .clear:hover {
-  border-bottom-color: var(--buff);
-  color: var(--buff);
+  border-bottom-color: var(--ink);
+  color: var(--ink);
 }
 
 .clear:focus-visible {
-  outline: 2px solid var(--gold);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 3px;
 }
 

@@ -11,7 +11,7 @@
 }
 
 .dialog::backdrop {
-  background: rgba(7, 29, 23, 0.82);
+  background: color-mix(in srgb, var(--ink) 82%, transparent);
   backdrop-filter: blur(4px);
 }
 
@@ -27,9 +27,9 @@
 }
 
 .scorecard {
-  background: var(--buff);
-  border: 8px solid var(--buff);
-  box-shadow: 0 42px 90px rgba(0, 0, 0, 0.5);
+  background: var(--surface);
+  border: 8px solid var(--surface);
+  box-shadow: 0 42px 90px color-mix(in srgb, var(--ink) 45%, transparent);
 }
 
 .scorecardBar {
@@ -38,8 +38,8 @@
   justify-content: space-between;
   gap: 16px;
   padding: 12px 16px;
-  background: var(--green-900);
-  color: var(--buff);
+  background: var(--ink);
+  color: var(--page);
   font-family: var(--mono);
   font-size: 0.61rem;
   letter-spacing: 0.14em;
@@ -52,10 +52,10 @@
   height: 32px;
   flex: 0 0 auto;
   place-items: center;
-  border: 1px solid rgba(244, 236, 217, 0.4);
+  border: 1px solid color-mix(in srgb, var(--page) 40%, transparent);
   border-radius: 0;
   background: transparent;
-  color: var(--buff);
+  color: var(--page);
   cursor: pointer;
   font-size: 1.05rem;
   line-height: 1;
@@ -63,8 +63,8 @@
 
 .dialogClose:hover,
 .dialogClose:focus-visible {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: var(--gold);
+  color: var(--gold);
   outline: none;
 }
 
@@ -85,8 +85,8 @@
   height: 52px;
   flex: 0 0 auto;
   place-items: center;
-  background: var(--accent-deep);
-  color: var(--buff);
+  background: var(--accent-strong);
+  color: var(--page);
   font-family: var(--mono);
   font-size: 0.86rem;
   font-weight: 700;
@@ -108,7 +108,7 @@
 
 .scorecardPlatform {
   margin: 7px 0 0;
-  color: var(--muted);
+  color: var(--ink-muted);
   font-family: var(--mono);
   font-size: 0.59rem;
   letter-spacing: 0.12em;
@@ -133,7 +133,7 @@
 
 .scorecardRating > span {
   margin-top: 7px;
-  color: var(--muted);
+  color: var(--ink-muted);
   font-family: var(--mono);
   font-size: 0.56rem;
   letter-spacing: 0.14em;
@@ -156,7 +156,7 @@
 .blockTitleRow h3,
 .chartTitleRow h3 {
   margin: 0;
-  color: var(--muted);
+  color: var(--ink-muted);
   font-family: var(--mono);
   font-size: 0.6rem;
   letter-spacing: 0.14em;
@@ -165,7 +165,7 @@
 
 .blockTitleRow span,
 .chartTitleRow span {
-  color: var(--muted);
+  color: var(--ink-muted);
   font-size: 0.74rem;
 }
 
@@ -178,11 +178,11 @@
 .matrixScroll {
   overflow-x: auto;
   border: 1px solid var(--line);
-  background: var(--buff);
+  background: var(--surface);
 }
 
 .matrixScroll:focus-visible {
-  outline: 2px solid var(--accent-deep);
+  outline: 2px solid var(--accent-strong);
   outline-offset: 2px;
 }
 
@@ -196,7 +196,7 @@
 .matrix caption {
   padding: 10px 12px;
   border-bottom: 1px solid var(--line);
-  color: var(--muted);
+  color: var(--ink-muted);
   font-family: var(--mono);
   font-size: 0.53rem;
   letter-spacing: 0.08em;
@@ -212,7 +212,7 @@
 }
 
 .matrix thead th {
-  color: var(--muted);
+  color: var(--ink-muted);
   font-family: var(--mono);
   font-size: 0.55rem;
   font-weight: 700;
@@ -243,7 +243,7 @@
 }
 
 .missingCell {
-  color: var(--muted);
+  color: var(--ink-muted);
   font-family: var(--mono);
   font-size: 0.59rem;
   letter-spacing: 0.03em;
@@ -251,12 +251,12 @@
 }
 
 .activeCell {
-  background: rgba(224, 82, 44, 0.12);
-  box-shadow: inset 0 -2px 0 var(--accent-deep);
+  background: color-mix(in srgb, var(--accent-strong) 12%, transparent);
+  box-shadow: inset 0 -2px 0 var(--accent-strong);
 }
 
 .activeCell.ratedCell {
-  color: var(--accent-deep);
+  color: var(--accent-strong);
 }
 
 .extrasBlock {
@@ -284,7 +284,7 @@
 }
 
 .extras dt {
-  color: var(--muted);
+  color: var(--ink-muted);
   font-family: var(--mono);
   font-size: 0.52rem;
   letter-spacing: 0.1em;
@@ -301,7 +301,7 @@
 .extrasNote {
   max-width: 62ch;
   margin: 10px 0 0;
-  color: var(--muted);
+  color: var(--ink-muted);
   font-size: 0.76rem;
   line-height: 1.5;
 }
@@ -329,7 +329,7 @@
 }
 
 .scorecardStats dt {
-  color: var(--muted);
+  color: var(--ink-muted);
   font-family: var(--mono);
   font-size: 0.54rem;
   letter-spacing: 0.12em;
@@ -357,8 +357,8 @@
   padding: 12px 16px 11px;
   border: 0;
   border-radius: 0;
-  background: var(--accent-deep);
-  color: var(--buff);
+  background: var(--accent-strong);
+  color: var(--page);
   cursor: pointer;
   font-family: var(--mono);
   font-size: 0.62rem;
@@ -369,18 +369,18 @@
 }
 
 .focusAction:hover {
-  background: var(--accent);
+  background: color-mix(in srgb, var(--accent-strong) 84%, var(--ink));
 }
 
 .focusAction:focus-visible {
-  outline: 3px solid var(--gold);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
 .scorecardActions p {
   max-width: 44ch;
   margin: 0;
-  color: var(--muted);
+  color: var(--ink-muted);
   font-size: 0.74rem;
   line-height: 1.45;
 }

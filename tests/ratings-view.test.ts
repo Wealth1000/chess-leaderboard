@@ -1021,3 +1021,59 @@ describe("platform identity and account gating", () => {
     expect(aliases).toContain("wealth999");
   });
 });
+
+describe("layout invariance", () => {
+  it("defaults to the board layout", () => {
+    expect(DEFAULT_VIEW_STATE.layout).toBe("board");
+  });
+
+  it("builds an identical view model for the board and list layouts", () => {
+    const alpha = player("alpha", "Alpha");
+    const beta = player("beta", "Beta");
+    const gamma = player("gamma", "Gamma", {
+      chessCom: "gamma-handle",
+      lichess: "gamma-lichess",
+    });
+    const unrated = player("unrated", "Unrated", { chessCom: "unrated" });
+    const snapshots = [
+      snapshot(alpha, "2026-09-01", [rating("chess.com", "rapid", 1200)]),
+      snapshot(alpha, "2026-10-22", [rating("chess.com", "rapid", 1400)]),
+      snapshot(beta, "2026-09-01", [rating("chess.com", "rapid", 1300)]),
+      snapshot(beta, "2026-10-22", [rating("chess.com", "rapid", 1350)]),
+      snapshot(gamma, "2026-10-22", [
+        rating("chess.com", "rapid", 1500),
+        rating("lichess", "rapid", 1600),
+      ]),
+      snapshot(unrated, "2026-10-22", [rating("chess.com", "rapid", null)]),
+    ];
+    const players = [alpha, beta, gamma, unrated];
+    const shared = {
+      platform: "chess.com",
+      category: "rapid",
+      range: "all",
+      focusPlayerId: "alpha",
+    } as const;
+
+    const board = buildRatingsView(
+      players,
+      snapshots,
+      view({ ...shared, layout: "board" }),
+    );
+    const list = buildRatingsView(
+      players,
+      snapshots,
+      view({ ...shared, layout: "list" }),
+    );
+
+    expect(list.ranked).toEqual(board.ranked);
+    expect(list.rated).toEqual(board.rated);
+    expect(list.leader).toEqual(board.leader);
+    expect(list.average).toBe(board.average);
+    expect(list.top10).toBe(board.top10);
+    expect(list.ratedCount).toBe(board.ratedCount);
+    expect(list.scorecards).toEqual(board.scorecards);
+    expect(list.field).toEqual(board.field);
+    expect(list.focus).toEqual(board.focus);
+    expect(list.notice).toEqual(board.notice);
+  });
+});

@@ -21,7 +21,7 @@ type ChartMode = "field" | "focus";
 
 export default function Leaderboard({ players }: LeaderboardProps) {
   const { snapshots, status } = useSnapshots();
-  const { view, setPlatform, setCategory, setRange, setFocusPlayer } =
+  const { view, setPlatform, setCategory, setRange, setFocusPlayer, setLayout } =
     useViewState();
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const [chartMode, setChartMode] = useState<ChartMode>("field");
@@ -112,6 +112,8 @@ export default function Leaderboard({ players }: LeaderboardProps) {
           model={model}
           loading={loading}
           warning={warning}
+          layout={view.layout}
+          onLayoutChange={setLayout}
           onSelect={setSelectedPlayerId}
         />
         <FieldChart

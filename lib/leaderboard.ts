@@ -38,6 +38,7 @@ export function buildLeaderboard(
     category,
     range: "7d",
     focusPlayerId: null,
+    layout: "board",
   });
 
   return {
