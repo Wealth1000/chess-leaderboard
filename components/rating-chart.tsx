@@ -13,10 +13,23 @@ import type { ScorecardHistoryPoint } from "@/lib/ratings-view";
 import type { Category, Platform, RangeKey } from "@/lib/types";
 import styles from "./rating-chart.module.css";
 
-const PLATFORM_COLORS: Record<Platform, string> = {
+const PLATFORM_COLOR_TOKENS: Record<Platform, string> = {
+  "chess.com": "--chart-series-1",
+  lichess: "--chart-series-2",
+};
+
+const PLATFORM_COLOR_FALLBACKS: Record<Platform, string> = {
   "chess.com": "#b23b1e",
   lichess: "#2f6b54",
 };
+
+function readColorToken(
+  style: CSSStyleDeclaration,
+  name: string,
+  fallback: string,
+) {
+  return style.getPropertyValue(name).trim() || fallback;
+}
 
 type RatingChartProps = {
   playerName: string;
@@ -55,7 +68,33 @@ export default function RatingChart({
         rootStyle.getPropertyValue("--mono").trim() || "monospace";
       const bodyFont =
         rootStyle.getPropertyValue("--body").trim() || "sans-serif";
-      const color = PLATFORM_COLORS[platform];
+      const color = readColorToken(
+        rootStyle,
+        PLATFORM_COLOR_TOKENS[platform],
+        PLATFORM_COLOR_FALLBACKS[platform],
+      );
+      const tooltipBg = readColorToken(rootStyle, "--chart-tooltip-bg", "#14231d");
+      const tooltipText = readColorToken(
+        rootStyle,
+        "--chart-tooltip-text",
+        "#f6eedc",
+      );
+      const tickColor = readColorToken(rootStyle, "--chart-tick", "#5d6c60");
+      const gridColor = readColorToken(
+        rootStyle,
+        "--chart-grid",
+        "rgba(20, 35, 29, 0.12)",
+      );
+      const axisColor = readColorToken(
+        rootStyle,
+        "--chart-axis",
+        "rgba(20, 35, 29, 0.22)",
+      );
+      const pointBorderColor = readColorToken(
+        rootStyle,
+        "--chart-point-border",
+        "#fcf7ea",
+      );
 
       const config: ChartConfiguration<"line"> = {
         type: "line",
@@ -71,7 +110,7 @@ export default function RatingChart({
               pointRadius: 4,
               pointHoverRadius: 6,
               pointBackgroundColor: color,
-              pointBorderColor: "#f4ecd9",
+              pointBorderColor,
               pointBorderWidth: 1.5,
               tension: 0.28,
               spanGaps: true,
@@ -90,9 +129,9 @@ export default function RatingChart({
           plugins: {
             legend: { display: false },
             tooltip: {
-              backgroundColor: "#14231d",
-              titleColor: "#f4ecd9",
-              bodyColor: "#f4ecd9",
+              backgroundColor: tooltipBg,
+              titleColor: tooltipText,
+              bodyColor: tooltipText,
               padding: 10,
               titleFont: { family: monoFont, size: 10 },
               bodyFont: { family: bodyFont, size: 12 },
@@ -106,9 +145,9 @@ export default function RatingChart({
           scales: {
             x: {
               grid: { display: false },
-              border: { color: "rgba(20, 35, 29, 0.22)" },
+              border: { color: axisColor },
               ticks: {
-                color: "#5d6c60",
+                color: tickColor,
                 maxRotation: 0,
                 font: { family: monoFont, size: 9 },
               },
@@ -116,15 +155,15 @@ export default function RatingChart({
             y: {
               beginAtZero: false,
               border: { display: false },
-              grid: { color: "rgba(20, 35, 29, 0.12)" },
+              grid: { color: gridColor },
               title: {
                 display: true,
                 text: `${categoryName} rating`,
-                color: "#5d6c60",
+                color: tickColor,
                 font: { family: monoFont, size: 9 },
               },
               ticks: {
-                color: "#5d6c60",
+                color: tickColor,
                 precision: 0,
                 font: { family: monoFont, size: 9 },
               },
