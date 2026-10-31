@@ -42,18 +42,66 @@ function readChessComCategory(stats, source) {
   }
 }
 
+// Cumulative games played for a Chess.com category, summed from the record's
+// win/loss/draw counts. The classical record also carries `time_per_move` and
+// `timeout_percent`; only the three numeric result counts are read, so those
+// non-result keys are ignored. A category with no usable record yields null
+// (omitted), never 0 — "unknown" and "played none" stay distinguishable.
+function readChessComGames(stats, source) {
+  try {
+    const record = stats?.[source]?.record;
+
+    if (!record || typeof record !== 'object') {
+      return null;
+    }
+
+    let total = 0;
+    let seen = false;
+
+    for (const key of ['win', 'loss', 'draw']) {
+      const value = record[key];
+
+      if (isNumber(value)) {
+        total += value;
+        seen = true;
+      }
+    }
+
+    return seen ? total : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function readLichessGames(stats, category) {
+  try {
+    const games = stats?.perfs?.[category]?.games;
+    return isNumber(games) ? games : null;
+  } catch (error) {
+    return null;
+  }
+}
+
 function parseChessComStats(stats) {
   const ratings = emptyRatings();
+  const gamesPlayed = {};
 
   for (const category of CATEGORIES) {
     if (category === 'puzzle') {
       // Chess.com publishes tactics high and Puzzle Rush best, not a current
-      // puzzle rating. The puzzle category is therefore always unavailable.
+      // puzzle rating. The puzzle category is therefore always unavailable,
+      // and it never gets a game count.
       ratings.puzzle = null;
       continue;
     }
 
-    ratings[category] = readChessComCategory(stats, CHESSCOM_SOURCES[category]);
+    const source = CHESSCOM_SOURCES[category];
+    ratings[category] = readChessComCategory(stats, source);
+
+    const games = readChessComGames(stats, source);
+    if (games !== null) {
+      gamesPlayed[category] = games;
+    }
   }
 
   const extras = emptyChessComExtras();
@@ -72,11 +120,12 @@ function parseChessComStats(stats) {
     extras.puzzleRushBest = null;
   }
 
-  return { ratings, extras };
+  return { ratings, gamesPlayed, extras };
 }
 
 function parseLichessStats(stats) {
   const ratings = emptyRatings();
+  const gamesPlayed = {};
 
   for (const category of CATEGORIES) {
     try {
@@ -86,15 +135,23 @@ function parseLichessStats(stats) {
 
       // Lichess keeps default provisional ratings for unplayed categories.
       // Require real games before treating the value as a rating.
-      ratings[category] = isNumber(games) && games > 0 && isNumber(rating)
-        ? rating
-        : null;
+      const hasRating = isNumber(games) && games > 0 && isNumber(rating);
+      ratings[category] = hasRating ? rating : null;
+
+      // Puzzle never gets a game count; other categories carry the cumulative
+      // `perfs.<category>.games` only when the rating is real.
+      if (category !== 'puzzle' && hasRating) {
+        const count = readLichessGames(stats, category);
+        if (count !== null) {
+          gamesPlayed[category] = count;
+        }
+      }
     } catch (error) {
       ratings[category] = null;
     }
   }
 
-  return { ratings };
+  return { ratings, gamesPlayed };
 }
 
 function buildAccountRatings(username, platform, ratings) {
@@ -104,6 +161,83 @@ function buildAccountRatings(username, platform, ratings) {
     category,
     rating: isNumber(ratings[category]) ? ratings[category] : null
   }));
+}
+
+// A category is "v2" when its entry carries an `accounts` object. The document
+// may legitimately mix shapes during the transition, so every reader detects the
+// shape per entry rather than trusting the document-level `version`.
+function isV2Entry(entry) {
+  return !!entry && typeof entry === 'object' && !Array.isArray(entry) &&
+    !!entry.accounts && typeof entry.accounts === 'object' && !Array.isArray(entry.accounts);
+}
+
+function isV2Document(document) {
+  return !!document && typeof document === 'object' && document.version === 2;
+}
+
+// Build one account entry in the v2 compact shape. Numeric ratings go in
+// `ratings`; every other category (including Chess.com's always-unavailable
+// puzzle) goes in `unplayed`, which is load-bearing and must not be collapsed
+// into "absent". `gamesPlayed` is omitted entirely when empty, and counts are
+// only attached to categories that actually have a rating.
+function buildV2Account(username, ratings, gamesPlayed) {
+  const outRatings = {};
+  const unplayed = [];
+
+  for (const category of CATEGORIES) {
+    if (isNumber(ratings?.[category])) {
+      outRatings[category] = ratings[category];
+    } else {
+      unplayed.push(category);
+    }
+  }
+
+  const account = { username, ratings: outRatings, unplayed };
+
+  const counts = {};
+  for (const category of CATEGORIES) {
+    const count = gamesPlayed?.[category];
+    if (Object.prototype.hasOwnProperty.call(outRatings, category) && isNumber(count)) {
+      counts[category] = count;
+    }
+  }
+
+  if (Object.keys(counts).length > 0) {
+    account.gamesPlayed = counts;
+  }
+
+  return account;
+}
+
+// Build a v2 snapshot. `accounts` and `chessComExtras` are omitted when empty
+// so a member with no accounts writes the same minimal record as today.
+function buildV2Snapshot(playerId, date, accounts, chessComExtras) {
+  const snapshot = { playerId, date };
+
+  const accountEntries = Object.entries(accounts || {});
+  if (accountEntries.length > 0) {
+    snapshot.accounts = Object.fromEntries(accountEntries);
+  }
+
+  if (chessComExtras) {
+    snapshot.chessComExtras = chessComExtras;
+  }
+
+  return snapshot;
+}
+
+function buildDocument(snapshots) {
+  return { version: 2, snapshots: Array.isArray(snapshots) ? snapshots : [] };
+}
+
+// The gist file is minified: no indentation, no surrounding whitespace. Accepts
+// either a bare snapshots array or a `{ snapshots }` wrapper so a merged result
+// can be encoded directly.
+function encodeDocument(input) {
+  const snapshots = Array.isArray(input)
+    ? input
+    : (Array.isArray(input?.snapshots) ? input.snapshots : []);
+  return JSON.stringify(buildDocument(snapshots));
 }
 
 // Build an old id -> current id map from the optional `formerIds` field in
@@ -236,14 +370,14 @@ async function fetchChessComStats(username) {
   }, `chess.com ${username}`);
 
   if (!json) {
-    return { ratings: emptyRatings(), extras: emptyChessComExtras() };
+    return { ratings: emptyRatings(), gamesPlayed: {}, extras: emptyChessComExtras() };
   }
 
   try {
     return parseChessComStats(json);
   } catch (error) {
     console.error(`  chess.com ${username}: could not parse stats (${error.message})`);
-    return { ratings: emptyRatings(), extras: emptyChessComExtras() };
+    return { ratings: emptyRatings(), gamesPlayed: {}, extras: emptyChessComExtras() };
   }
 }
 
@@ -256,15 +390,30 @@ async function fetchLichessStats(username) {
   }, `lichess ${username}`);
 
   if (!json) {
-    return { ratings: emptyRatings() };
+    return { ratings: emptyRatings(), gamesPlayed: {} };
   }
 
   try {
     return parseLichessStats(json);
   } catch (error) {
     console.error(`  lichess ${username}: could not parse stats (${error.message})`);
-    return { ratings: emptyRatings() };
+    return { ratings: emptyRatings(), gamesPlayed: {} };
   }
+}
+
+// Accept either stored document shape — v1 (`{ snapshots: [...] }`, no version)
+// or v2 — and return the entries exactly as they were stored. Legacy entries are
+// never normalised or upgraded here; the site upgrades them at read time. The
+// document may therefore hold a mix of v1 and v2 entries.
+function readExistingDocument(parsed) {
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    return { version: null, snapshots: [] };
+  }
+
+  return {
+    version: isV2Document(parsed) ? 2 : null,
+    snapshots: Array.isArray(parsed.snapshots) ? parsed.snapshots : []
+  };
 }
 
 function fetchExistingSnapshots() {
@@ -287,12 +436,10 @@ function fetchExistingSnapshots() {
 
     try {
       const parsed = JSON.parse(snapshotFile.content);
-      return {
-        snapshots: Array.isArray(parsed.snapshots) ? parsed.snapshots : []
-      };
+      return readExistingDocument(parsed);
     } catch (error) {
       console.error('Existing gist snapshot file is invalid JSON, starting fresh');
-      return { snapshots: [] };
+      return { version: null, snapshots: [] };
     }
   });
 }
@@ -301,7 +448,7 @@ function updateGist(snapshots) {
   return new Promise((resolve, reject) => {
     const data = JSON.stringify({
       files: {
-        [SNAPSHOT_FILENAME]: { content: JSON.stringify(snapshots, null, 2) }
+        [SNAPSHOT_FILENAME]: { content: encodeDocument(snapshots) }
       }
     });
 
@@ -340,19 +487,19 @@ function updateGist(snapshots) {
 }
 
 async function buildPlayerSnapshot(player, today) {
-  const ratings = [];
+  const accounts = {};
   let chessComExtras = null;
 
   if (player.chessCom) {
     const username = player.chessCom.toLowerCase();
     try {
       const result = await fetchChessComStats(username);
-      ratings.push(...buildAccountRatings(username, 'chess.com', result.ratings));
+      accounts['chess.com'] = buildV2Account(username, result.ratings, result.gamesPlayed);
       chessComExtras = result.extras;
       console.log(`  chess.com (${username}): ${formatRatings(result.ratings)} | ${formatChessComExtras(result.extras)}`);
     } catch (error) {
       console.error(`  chess.com (${username}): ${error.message}`);
-      ratings.push(...buildAccountRatings(username, 'chess.com', emptyRatings()));
+      accounts['chess.com'] = buildV2Account(username, emptyRatings(), {});
       chessComExtras = emptyChessComExtras();
     }
   }
@@ -360,27 +507,17 @@ async function buildPlayerSnapshot(player, today) {
   if (player.lichess) {
     try {
       const result = await fetchLichessStats(player.lichess);
-      ratings.push(...buildAccountRatings(player.lichess, 'lichess', result.ratings));
+      accounts.lichess = buildV2Account(player.lichess, result.ratings, result.gamesPlayed);
       console.log(`  lichess (${player.lichess}): ${formatRatings(result.ratings)}`);
     } catch (error) {
       console.error(`  lichess (${player.lichess}): ${error.message}`);
-      ratings.push(...buildAccountRatings(player.lichess, 'lichess', emptyRatings()));
+      accounts.lichess = buildV2Account(player.lichess, emptyRatings(), {});
     }
   }
 
-  const snapshot = {
-    playerId: player.id,
-    playerName: player.name,
-    date: today,
-    ratings
-  };
-
-  // Extras are Chess.com-only; Lichess snapshots omit the field entirely.
-  if (chessComExtras) {
-    snapshot.chessComExtras = chessComExtras;
-  }
-
-  return snapshot;
+  // `playerName` is deliberately absent: display names come from players.json.
+  // `username` stays inside each account — it is the identity gate.
+  return buildV2Snapshot(player.id, today, accounts, chessComExtras);
 }
 
 async function main() {
@@ -454,10 +591,20 @@ if (require.main === module) {
 
 module.exports = {
   CATEGORIES,
+  CHESSCOM_SOURCES,
   parseChessComStats,
   parseLichessStats,
   buildAccountRatings,
   mergeSnapshots,
   buildFormerIdMap,
-  remapFormerIds
+  remapFormerIds,
+  readChessComGames,
+  readLichessGames,
+  isV2Entry,
+  isV2Document,
+  buildV2Account,
+  buildV2Snapshot,
+  buildDocument,
+  encodeDocument,
+  readExistingDocument
 };
