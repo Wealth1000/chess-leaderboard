@@ -1,12 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import {
-  DEFAULT_VIEW_STATE,
-  MAIN_CATEGORIES,
-  RANGES,
-} from "@/lib/ratings-view";
-import type { MainCategory, Platform, RangeKey, ViewState } from "@/lib/types";
+import { DEFAULT_VIEW_STATE } from "@/lib/ratings-view";
+import { resolveViewState } from "@/lib/view-state";
+import type {
+  Layout,
+  MainCategory,
+  Platform,
+  RangeKey,
+  ViewState,
+} from "@/lib/types";
 
 const STORAGE_KEY = "chess-leaderboard:view-state:v1";
 
@@ -16,45 +19,11 @@ export type ViewStateControls = {
   setCategory: (category: MainCategory) => void;
   setRange: (range: RangeKey) => void;
   setFocusPlayer: (playerId: string | null) => void;
+  setLayout: (layout: Layout) => void;
 };
 
-function isPlatform(value: unknown): value is Platform {
-  return value === "chess.com" || value === "lichess";
-}
-
-function isMainCategory(value: unknown): value is MainCategory {
-  return (
-    typeof value === "string" &&
-    (MAIN_CATEGORIES as string[]).includes(value)
-  );
-}
-
-function isRange(value: unknown): value is RangeKey {
-  return typeof value === "string" && (RANGES as string[]).includes(value);
-}
-
-function validateViewState(value: unknown): ViewState {
-  if (!value || typeof value !== "object") return { ...DEFAULT_VIEW_STATE };
-
-  const stored = value as Partial<Record<keyof ViewState, unknown>>;
-
-  return {
-    platform: isPlatform(stored.platform)
-      ? stored.platform
-      : DEFAULT_VIEW_STATE.platform,
-    category: isMainCategory(stored.category)
-      ? stored.category
-      : DEFAULT_VIEW_STATE.category,
-    range: isRange(stored.range) ? stored.range : DEFAULT_VIEW_STATE.range,
-    focusPlayerId:
-      typeof stored.focusPlayerId === "string" && stored.focusPlayerId.length > 0
-        ? stored.focusPlayerId
-        : null,
-  };
-}
-
 /**
- * Persists the four view values under one localStorage key.
+ * Persists the five view values under one localStorage key.
  *
  * The first render always uses the documented defaults so static export and
  * client hydration agree. Stored values are read in an effect, and writing is
@@ -69,7 +38,7 @@ export function useViewState(): ViewStateControls {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
       if (raw) {
-        setView(validateViewState(JSON.parse(raw)));
+        setView(resolveViewState(JSON.parse(raw)));
       }
     } catch {
       // A blocked or malformed store simply leaves the defaults in place.
@@ -104,5 +73,16 @@ export function useViewState(): ViewStateControls {
     setView((current) => ({ ...current, focusPlayerId: playerId }));
   }, []);
 
-  return { view, setPlatform, setCategory, setRange, setFocusPlayer };
+  const setLayout = useCallback((layout: Layout) => {
+    setView((current) => ({ ...current, layout }));
+  }, []);
+
+  return {
+    view,
+    setPlatform,
+    setCategory,
+    setRange,
+    setFocusPlayer,
+    setLayout,
+  };
 }
