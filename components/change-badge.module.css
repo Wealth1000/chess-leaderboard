@@ -16,7 +16,7 @@
 }
 
 .date {
-  color: var(--muted);
+  color: var(--ink-muted);
   font-size: clamp(0.7rem, 1.3vw, 1.3rem);
   font-weight: 400;
   letter-spacing: 0.04em;
@@ -24,16 +24,16 @@
 }
 
 .up {
-  color: var(--change-up, #17603f);
+  color: var(--change-up, var(--ink));
 }
 
 .down {
-  color: var(--change-down, #a53016);
+  color: var(--change-down, var(--accent-strong));
 }
 
 .flat,
 .unavailable {
-  color: var(--change-neutral, var(--muted));
+  color: var(--change-neutral, var(--ink-muted));
 }
 
 .compact {

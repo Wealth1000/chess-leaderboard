@@ -13,7 +13,7 @@
 
 .sectionHead h2 {
   margin: 0;
-  color: var(--buff);
+  color: var(--ink);
   font-family: var(--display);
   font-size: clamp(2rem, 4.2vw, 3.5rem);
   font-weight: 400;
@@ -24,7 +24,7 @@
 
 .sectionNote {
   margin: 0 0 5px;
-  color: rgba(244, 236, 217, 0.56);
+  color: var(--ink-muted);
   font-family: var(--mono);
   font-size: 0.58rem;
   letter-spacing: 0.1em;
@@ -34,9 +34,9 @@
 
 .chartCard {
   padding: clamp(18px, 3vw, 30px);
-  background: var(--buff);
+  background: var(--surface);
   color: var(--ink);
-  box-shadow: 0 30px 64px rgba(0, 0, 0, 0.26);
+  box-shadow: var(--shadow-card);
 }
 
 .controlBar {
@@ -52,7 +52,7 @@
 .modeToggle {
   display: flex;
   flex: 0 0 auto;
-  border: 1px solid rgba(20, 35, 29, 0.32);
+  border: 1px solid var(--line-strong);
 }
 
 .modeButton {
@@ -60,7 +60,7 @@
   border: 0;
   border-radius: 0;
   background: transparent;
-  color: var(--muted);
+  color: var(--ink-muted);
   cursor: pointer;
   font-family: var(--mono);
   font-size: 0.6rem;
@@ -71,22 +71,22 @@
 }
 
 .modeButton + .modeButton {
-  border-left: 1px solid rgba(20, 35, 29, 0.32);
+  border-left: 1px solid var(--line-strong);
 }
 
 .modeButton:hover {
-  background: rgba(20, 35, 29, 0.07);
+  background: color-mix(in srgb, var(--ink) 7%, transparent);
   color: var(--ink);
 }
 
 .modeButton:focus-visible {
-  outline: 2px solid var(--accent-deep);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
 .modeButton[aria-pressed="true"] {
-  background: var(--accent-deep);
-  color: var(--buff);
+  background: var(--accent-strong);
+  color: var(--page);
 }
 
 .focusBar {
@@ -100,7 +100,7 @@
 
 .focusStatus {
   overflow: hidden;
-  color: var(--muted);
+  color: var(--ink-muted);
   font-family: var(--mono);
   font-size: 0.57rem;
   letter-spacing: 0.08em;
@@ -130,45 +130,45 @@
 }
 
 .textButton:hover {
-  border-color: var(--accent-deep);
-  background: rgba(224, 82, 44, 0.08);
+  border-color: var(--accent-strong);
+  background: color-mix(in srgb, var(--accent-strong) 8%, transparent);
 }
 
 .textButton:focus-visible {
-  outline: 2px solid var(--accent-deep);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
 .picker {
   margin-bottom: 20px;
   padding: 14px;
-  background: var(--buff-deep);
+  background: var(--surface-sunken);
   border: 1px solid var(--line);
 }
 
 .picker input {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid rgba(20, 35, 29, 0.3);
+  border: 1px solid var(--line-strong);
   border-radius: 0;
   outline: none;
-  background: var(--buff);
+  background: var(--surface);
   color: var(--ink);
   font-size: 0.88rem;
 }
 
 .picker input::placeholder {
-  color: var(--muted);
+  color: var(--ink-muted);
 }
 
 .picker input:focus {
-  border-color: var(--accent-deep);
-  box-shadow: 0 0 0 2px rgba(224, 82, 44, 0.16);
+  border-color: var(--accent-strong);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-strong) 16%, transparent);
 }
 
 .pickerNote {
   margin: 8px 0 0;
-  color: var(--muted);
+  color: var(--ink-muted);
   font-family: var(--mono);
   font-size: 0.54rem;
   letter-spacing: 0.06em;
@@ -201,17 +201,17 @@
 }
 
 .pickerOption:hover {
-  background: rgba(20, 35, 29, 0.06);
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
 }
 
 .pickerOption:focus-visible {
-  outline: 2px solid var(--accent-deep);
+  outline: 2px solid var(--focus-ring);
   outline-offset: -2px;
 }
 
 .pickerOption[aria-pressed="true"] {
-  background: var(--accent-deep);
-  color: var(--buff);
+  background: var(--accent-strong);
+  color: var(--page);
 }
 
 .pickerName {
@@ -224,7 +224,7 @@
 
 .pickerMeta {
   flex: 0 0 auto;
-  color: var(--muted);
+  color: var(--ink-muted);
   font-family: var(--mono);
   font-size: 0.54rem;
   letter-spacing: 0.04em;
@@ -232,12 +232,12 @@
 }
 
 .pickerOption[aria-pressed="true"] .pickerMeta {
-  color: rgba(244, 236, 217, 0.76);
+  color: color-mix(in srgb, var(--page) 76%, transparent);
 }
 
 .pickerEmpty {
   margin: 10px 0 0;
-  color: var(--muted);
+  color: var(--ink-muted);
   font-size: 0.84rem;
 }
 
@@ -271,7 +271,7 @@
 }
 
 .legendRank {
-  color: var(--muted);
+  color: var(--ink-muted);
   font-family: var(--mono);
   font-size: 0.52rem;
   font-weight: 700;
@@ -295,7 +295,7 @@
 .chartNote {
   flex: 0 0 auto;
   margin: 2px 0 0;
-  color: var(--muted);
+  color: var(--ink-muted);
   font-family: var(--mono);
   font-size: 0.55rem;
   letter-spacing: 0.08em;
@@ -326,7 +326,7 @@
 }
 
 .focusSummary dt {
-  color: var(--muted);
+  color: var(--ink-muted);
   font-family: var(--mono);
   font-size: 0.52rem;
   letter-spacing: 0.12em;
@@ -344,7 +344,7 @@
   display: block;
   margin-top: 3px;
   overflow: hidden;
-  color: var(--muted);
+  color: var(--ink-muted);
   font-family: var(--mono);
   font-size: 0.5rem;
   letter-spacing: 0.04em;
@@ -356,8 +356,8 @@
 .groupNote {
   margin: 0 0 18px;
   padding: 10px 14px;
-  border-left: 3px solid var(--gold);
-  background: rgba(217, 164, 65, 0.1);
+  border-left: 3px solid var(--accent-strong);
+  background: color-mix(in srgb, var(--accent-strong) 10%, transparent);
   color: var(--ink);
   font-size: 0.82rem;
   line-height: 1.45;
@@ -368,12 +368,12 @@
   margin: 0 0 20px;
   padding: 18px 20px;
   border: 1px solid var(--line);
-  background: var(--buff-deep);
+  background: var(--surface-sunken);
 }
 
 .focusState p {
   margin: 0;
-  color: var(--muted);
+  color: var(--ink-muted);
   font-size: 0.88rem;
   line-height: 1.55;
 }
@@ -398,7 +398,7 @@
   margin: 14px 0 0;
   padding-top: 12px;
   border-top: 1px solid var(--line);
-  color: var(--muted);
+  color: var(--ink-muted);
   font-size: 0.8rem;
   line-height: 1.5;
 }
@@ -407,7 +407,7 @@
   display: grid;
   min-height: 280px;
   place-items: center;
-  color: var(--muted);
+  color: var(--ink-muted);
   font-size: 0.94rem;
   text-align: center;
 }

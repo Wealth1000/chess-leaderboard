@@ -11,29 +11,29 @@
   gap: 12px 20px;
   margin-top: 16px;
   padding: 13px 16px;
-  border: 1px solid rgba(224, 82, 44, 0.55);
-  background: rgba(244, 236, 217, 0.06);
+  border: 1px solid color-mix(in srgb, var(--accent-strong) 55%, transparent);
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
 }
 
 .notice p {
   flex: 1 1 340px;
   margin: 0;
-  color: rgba(244, 236, 217, 0.78);
+  color: var(--ink);
   font-size: 0.82rem;
   line-height: 1.45;
 }
 
 .notice strong {
-  color: var(--buff);
+  color: var(--ink);
 }
 
 .noticeAction {
   flex: 0 0 auto;
   padding: 9px 13px;
-  border: 1px solid var(--accent);
+  border: 1px solid var(--accent-strong);
   border-radius: 0;
-  background: var(--accent-deep);
-  color: var(--buff);
+  background: var(--accent-strong);
+  color: var(--page);
   cursor: pointer;
   font-family: var(--mono);
   font-size: 0.58rem;
@@ -43,11 +43,11 @@
 }
 
 .noticeAction:hover {
-  background: var(--accent);
+  background: color-mix(in srgb, var(--accent-strong) 84%, var(--ink));
 }
 
 .noticeAction:focus-visible {
-  outline: 2px solid var(--gold);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
@@ -57,8 +57,8 @@
   gap: 24px;
   margin-top: clamp(48px, 7vw, 72px);
   padding: 24px 0 42px;
-  border-top: 1px solid var(--line-light);
-  color: rgba(244, 236, 217, 0.58);
+  border-top: 1px solid var(--line);
+  color: var(--ink-muted);
   font-size: 0.75rem;
 }
 
