@@ -191,7 +191,6 @@ export default function ClubBoard({
           className={styles.board}
           id="board"
           ref={boardRef}
-          aria-live="polite"
         >
         {loading ? (
           <div className={styles.boardMessage}>Reading the board…</div>

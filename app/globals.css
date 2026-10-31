@@ -32,16 +32,6 @@
   --chart-series-4: #28516b;
   --chart-series-5: #7a3b62;
 
-  /* Legacy aliases (temporary) */
-  --buff: var(--surface);
-  --buff-deep: var(--surface-sunken);
-  --muted: var(--ink-muted);
-  --green-900: var(--page);
-  --green-800: var(--board-dark);
-  --green-950: var(--ink);
-  --accent-deep: var(--accent-strong);
-  --line-light: var(--line);
-
   --display: var(--font-anton), "Arial Narrow", sans-serif;
   --mono: var(--font-space-mono), "Courier New", monospace;
   --body: var(--font-dm-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
