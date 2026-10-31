@@ -1,7 +1,8 @@
 # Chess Leaderboard
 
 A shared rating tracker for our chess group. Ratings are pulled daily from public
-chess.com and Lichess profiles, then ranked on a club chessboard.
+chess.com and Lichess profiles, then ranked on a club chessboard or read as a
+ranked list.
 
 ## Architecture
 
@@ -17,13 +18,18 @@ chess.com and Lichess profiles, then ranked on a club chessboard.
   the hero, board, scorecards, and charts, using one platform and one category
   at a time. Rankings always use the latest rating; the selected range only
   controls change indicators and chart windows.
+- **Board and list**: The rankings section offers a Board / List switch. Both
+  presentations render the same ranked model in the same order; the list is a
+  table view of the standings, not a second ranking.
+- **Theming**: Semantic tokens in `app/globals.css` define the palette. Component
+  styles and chart colors read those tokens instead of literal colors.
 - **Hosting**: GitHub Pages, deployed by the workflow in `.github/workflows/deploy.yml`
 
 ## Project layout
 
 ```text
 app/            Next.js app shell, metadata, fonts, global styles
-components/     Leaderboard UI (board, hero, scorecards, chart) + CSS Modules
+components/     Leaderboard UI (board, list table, hero, scorecards, chart) + CSS Modules
 hooks/          Client-side data hooks
 lib/            Types, player data, ranking, formatting, history, gist client
 data/           Committed player list
@@ -56,6 +62,10 @@ The production build writes a static site to `out/`.
 Pushes to `main` run `.github/workflows/deploy.yml`, which installs with pnpm,
 builds the static site, and publishes `out/` to GitHub Pages.
 
+The site is **open by default**. The build does not set a closure flag, so a
+routine push publishes the live leaderboard. The under-construction page is kept
+as a kill switch that takes the site down reliably during maintenance.
+
 The production site is served from a repository subpath, so the build sets:
 
 ```bash
@@ -64,6 +74,54 @@ NEXT_PUBLIC_BASE_PATH=/chess-leaderboard pnpm build
 
 For local development the base path is empty. To preview a production build
 locally, run the command above, then serve `out/` under `/chess-leaderboard/`.
+
+### Closing the site temporarily
+
+The kill switch is the `SITE_CLOSED` check in the app, driven by the
+`NEXT_PUBLIC_SITE_CLOSED` build variable. To take the site down, set it to
+`"true"` in the "Build static site" step's `env` in
+`.github/workflows/deploy.yml`:
+
+```yaml
+      - name: Build static site
+        run: pnpm build
+        env:
+          NEXT_PUBLIC_BASE_PATH: /chess-leaderboard
+          NEXT_PUBLIC_SITE_CLOSED: "true"
+```
+
+Then push to `main` (or run the workflow manually) to redeploy. The closure page
+keeps its suggestion form and GitHub issue link, so members can still reach you.
+
+To reopen, remove the `NEXT_PUBLIC_SITE_CLOSED` line again and redeploy. When the
+variable is absent the app defaults to open; no app code changes are needed for
+either direction. The same flag works for a local preview build if you want to
+check the closure page.
+
+## Board and list views
+
+The rankings section has a **Board / List** switch next to the player search. The
+chessboard is the default and keeps its open-seat conceit; the list renders the
+same ranking as a table (rank, player, handle, rating, and the change for the
+selected range). Search, counts, empty states, and scorecards behave the same in
+both views.
+
+The choice is stored with the rest of the view state under the existing key
+(`chess-leaderboard:view-state:v1`), so the platform, category, range, and focused
+player persist alongside it. A stored payload that predates the layout field, or
+one with an unrecognized layout value, opens on the board.
+
+## Theme tokens
+
+The palette is expressed as semantic tokens in `app/globals.css` (`--page`,
+`--surface`, `--ink`, `--ink-muted`, `--line`, `--line-strong`, `--accent`,
+`--accent-strong`, `--gold`, `--board-light`, `--board-dark`, and the chart
+tokens). Components must style with tokens rather than literal colors.
+
+Charts read the same tokens at runtime, so CSS and canvas cannot drift apart. Gold
+is a highlight for ink surfaces only; it is never used for focus indicators or
+small text on the cream background, where rust (`--accent-strong`) or ink carries
+focus and small accent text.
 
 ## Data flow
 
