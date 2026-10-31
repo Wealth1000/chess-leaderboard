@@ -37,11 +37,18 @@ export type SnapshotFile = {
   snapshots: Snapshot[];
 };
 
+/**
+ * How the rankings are presented. Presentation-only: the same ranking drives
+ * both the board and the list, so `layout` never influences the ratings model.
+ */
+export type Layout = "board" | "list";
+
 export type ViewState = {
   platform: Platform;
   category: MainCategory;
   range: RangeKey;
   focusPlayerId: string | null;
+  layout: Layout;
 };
 
 export type RatingChange = {
