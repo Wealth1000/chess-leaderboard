@@ -189,19 +189,46 @@ function isV2Document(document) {
 }
 
 /**
- * The newest earlier snapshot that still carries numeric ratings for one
- * platform. Entries with an empty `ratings` map are skipped: those are the
- * result of a failed fetch, so using them as the fallback would keep the hole
- * alive on every subsequent run.
+ * Convert a legacy (v1) snapshot's flat `ratings` array into the v2 account
+ * shape, so a rating from before the format migration can still be carried
+ * forward. Missing categories become `unplayed`, exactly as the v2 writer
+ * would have marked them.
  */
-function latestV2Account(snapshots, playerId, platform) {
+function legacyAccountFor(snapshot, platform) {
+  if (!Array.isArray(snapshot.ratings)) return null;
+
+  const entries = snapshot.ratings.filter(
+    (entry) => entry && entry.platform === platform && typeof entry.username === 'string'
+  );
+  if (entries.length === 0) return null;
+
+  const ratings = {};
+  for (const entry of entries) {
+    if (CATEGORIES.includes(entry.category)) {
+      ratings[entry.category] = entry.rating;
+    }
+  }
+
+  return buildV2Account(entries[0].username, ratings, {});
+}
+
+/**
+ * The newest earlier snapshot that still carries numeric ratings for one
+ * platform. Empty entries are skipped: those are the result of a failed fetch,
+ * so using them as the fallback would keep the hole alive on every subsequent
+ * run. Both v2 accounts and legacy v1 arrays are accepted, because the gist
+ * mixes shapes during the transition.
+ */
+function latestAccount(snapshots, playerId, platform) {
   let best = null;
 
   for (const snapshot of snapshots || []) {
     if (!snapshot || snapshot.playerId !== playerId || !snapshot.date) continue;
-    if (!isV2Entry(snapshot)) continue;
 
-    const account = snapshot.accounts?.[platform];
+    const account = isV2Entry(snapshot)
+      ? snapshot.accounts?.[platform]
+      : legacyAccountFor(snapshot, platform);
+
     if (!account || typeof account !== 'object') continue;
     if (!Object.values(account.ratings || {}).some(isNumber)) continue;
 
@@ -213,12 +240,12 @@ function latestV2Account(snapshots, playerId, platform) {
   return best;
 }
 
-function latestV2ChessComExtras(snapshots, playerId) {
+function latestChessComExtras(snapshots, playerId) {
   let best = null;
 
   for (const snapshot of snapshots || []) {
     if (!snapshot || snapshot.playerId !== playerId || !snapshot.date) continue;
-    if (!isV2Entry(snapshot) || !snapshot.chessComExtras) continue;
+    if (!snapshot.chessComExtras) continue;
 
     if (!best || snapshot.date > best.date) {
       best = { date: snapshot.date, extras: snapshot.chessComExtras };
@@ -234,7 +261,7 @@ function latestV2ChessComExtras(snapshots, playerId) {
  * ratings belong to a different account and must not be borrowed).
  */
 function carryForwardAccount(player, platform, previousSnapshots, username) {
-  const carried = latestV2Account(previousSnapshots, player.id, platform);
+  const carried = latestAccount(previousSnapshots, player.id, platform);
   if (!carried) return null;
 
   const stored = String(carried.account.username || '').toLowerCase();
@@ -623,7 +650,7 @@ async function buildPlayerSnapshot(
 
       if (result.unavailable) {
         const kept = keepKnown('chess.com', username);
-        const carriedExtras = latestV2ChessComExtras(previousSnapshots, player.id);
+        const carriedExtras = latestChessComExtras(previousSnapshots, player.id);
         if (carriedExtras) chessComExtras = carriedExtras.extras;
         accounts['chess.com'] = accounts['chess.com'] ||
           buildV2Account(username, emptyRatings(), {});
@@ -655,7 +682,7 @@ async function buildPlayerSnapshot(
       const kept = keepKnown('chess.com', username);
       accounts['chess.com'] = accounts['chess.com'] ||
         buildV2Account(username, emptyRatings(), {});
-      chessComExtras = latestV2ChessComExtras(previousSnapshots, player.id)?.extras ||
+      chessComExtras = latestChessComExtras(previousSnapshots, player.id)?.extras ||
         emptyChessComExtras();
       unavailableAccounts.push({
         playerId: player.id,
@@ -822,7 +849,7 @@ module.exports = {
   fetchChessComStats,
   fetchLichessStats,
   isMissingResponse,
-  latestV2Account,
+  latestAccount,
   carryForwardAccount,
   mergeSnapshots,
   buildFormerIdMap,

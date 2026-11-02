@@ -26,10 +26,10 @@ type StoredSnapshot = {
   }>;
 };
 
-const { latestV2Account, carryForwardAccount } = require(
+const { latestAccount, carryForwardAccount } = require(
   "../scripts/fetch-ratings.js",
 ) as {
-  latestV2Account: (
+  latestAccount: (
     snapshots: StoredSnapshot[],
     playerId: string,
     platform: string,
@@ -70,7 +70,7 @@ describe("carrying a rating through a failed fetch", () => {
   ];
 
   it("returns the newest earlier entry that still has a numeric rating", () => {
-    expect(latestV2Account(snapshots, "beeba", "chess.com")).toEqual({
+    expect(latestAccount(snapshots, "beeba", "chess.com")).toEqual({
       date: "2026-10-31",
       account: account("unlikelyeffect", 1572),
     });
@@ -106,10 +106,10 @@ describe("carrying a rating through a failed fetch", () => {
         accounts: { "chess.com": account("ghost", null) },
       },
     ];
-    expect(latestV2Account(empty, "ghost", "chess.com")).toBeNull();
+    expect(latestAccount(empty, "ghost", "chess.com")).toBeNull();
   });
 
-  it("ignores legacy snapshots and other players", () => {
+  it("reads legacy v1 snapshots but ignores other players", () => {
     const legacy: StoredSnapshot[] = [
       {
         playerId: "beeba",
@@ -129,6 +129,36 @@ describe("carrying a rating through a failed fetch", () => {
         accounts: { "chess.com": account("unlikelyeffect", 1600) },
       },
     ];
-    expect(latestV2Account(legacy, "beeba", "chess.com")).toBeNull();
+
+    const found = latestAccount(legacy, "beeba", "chess.com");
+    expect(found?.date).toBe("2026-10-20");
+    expect(found?.account.username).toBe("unlikelyeffect");
+    expect(found?.account.ratings.rapid).toBe(1500);
+  });
+
+  it("carries a legacy v1 rating forward when the handle matches", () => {
+    const legacy: StoredSnapshot[] = [
+      {
+        playerId: "beeba",
+        date: "2026-10-31",
+        ratings: [
+          {
+            username: "unlikelyeffect",
+            platform: "chess.com",
+            category: "rapid",
+            rating: 1572,
+          },
+        ],
+      },
+    ];
+
+    expect(
+      carryForwardAccount(
+        { id: "beeba" },
+        "chess.com",
+        legacy,
+        "unlikelyeffect",
+      )?.date,
+    ).toBe("2026-10-31");
   });
 });
