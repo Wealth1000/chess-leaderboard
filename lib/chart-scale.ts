@@ -1,3 +1,5 @@
+import { chartPercentile } from "@/lib/chart-distribution";
+
 /**
  * The field chart's y-axis ceiling.
  *
@@ -33,7 +35,8 @@ export function chartAxisCeiling(
   if (fullRange || values.length < CHART_CLAMP_MIN_PLAYERS) return null;
 
   const max = values[values.length - 1];
-  const ceiling = Math.ceil(percentile(values, PERCENTILE) / ROUND_TO) * ROUND_TO;
+  const ceiling =
+    Math.ceil(chartPercentile(values, PERCENTILE) / ROUND_TO) * ROUND_TO;
 
   return ceiling >= max ? null : ceiling;
 }
@@ -45,19 +48,4 @@ export function chartOutliersAbove(
 ): number {
   return ratings.filter((value) => Number.isFinite(value) && value > ceiling)
     .length;
-}
-
-/**
- * Linear-interpolated percentile over an ascending array. Matches the common
- * "inclusive" definition used by spreadsheet PERCENTILE, so the clamp agrees
- * with a number a maintainer could reproduce by hand.
- */
-function percentile(sorted: readonly number[], fraction: number): number {
-  const index = (sorted.length - 1) * fraction;
-  const lower = Math.floor(index);
-  const upper = Math.ceil(index);
-
-  if (lower === upper) return sorted[lower];
-
-  return sorted[lower] + (sorted[upper] - sorted[lower]) * (index - lower);
 }

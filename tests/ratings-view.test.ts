@@ -497,6 +497,10 @@ describe("field chart", () => {
         { date: "2026-10-22", value: 1300 },
       ],
     });
+    expect(sevenDay.field.band).toEqual([
+      { date: "2026-10-20", min: 1200, median: 1200, max: 1200 },
+      { date: "2026-10-22", min: 1300, median: 1300, max: 1300 },
+    ]);
 
     const all = buildRatingsView(
       [member, old],
@@ -515,6 +519,12 @@ describe("field chart", () => {
       "old",
     ]);
     expect(all.field.leaders).toHaveLength(2);
+    expect(all.field.band).toEqual([
+      { date: "2026-09-01", min: 925, median: 950, max: 975 },
+      { date: "2026-10-01", min: 1100, median: 1100, max: 1100 },
+      { date: "2026-10-20", min: 1200, median: 1200, max: 1200 },
+      { date: "2026-10-22", min: 1300, median: 1300, max: 1300 },
+    ]);
   });
 });
 

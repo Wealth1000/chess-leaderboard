@@ -1,4 +1,8 @@
 import { getPlayerHistory } from "@/lib/history";
+import {
+  chartDistributionBand,
+  type DistributionBandPoint,
+} from "@/lib/chart-distribution";
 import type {
   Category,
   ChessComExtras,
@@ -61,6 +65,7 @@ export type FieldChartModel = {
   dates: string[];
   series: ChartSeries[];
   leaders: ChartSeries[];
+  band: DistributionBandPoint[];
   hasData: boolean;
 };
 
@@ -483,6 +488,7 @@ export function buildRatingsView(
     dates: [...new Set(fieldSeries.flatMap((series) => series.points.map((point) => point.date)))].sort(),
     series: fieldSeries,
     leaders: fieldSeries.slice(0, 5),
+    band: chartDistributionBand(fieldSeries),
     hasData: fieldSeries.length > 0,
   };
 

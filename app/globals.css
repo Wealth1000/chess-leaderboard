@@ -16,16 +16,22 @@
   --shadow-card: 0 18px 40px color-mix(in srgb, var(--ink) 12%, transparent);
   --shadow-board: 0 26px 56px color-mix(in srgb, var(--ink) 18%, transparent);
 
-  /* Chart tokens */
+  /* Chart tokens: warm paper plot with a slate-blue field. */
+  --chart-bg: #fbf6e8;
+  --chart-paper: #fcf7ea;
+  --chart-inset-border: color-mix(in srgb, var(--ink) 14%, transparent);
   --chart-tooltip-bg: var(--ink);
   --chart-tooltip-text: var(--page);
-  --chart-tick: var(--ink-muted);
-  --chart-grid: color-mix(in srgb, var(--ink) 12%, transparent);
-  --chart-axis: color-mix(in srgb, var(--ink) 22%, transparent);
-  --chart-point-border: var(--surface);
-  --chart-field: color-mix(in srgb, var(--ink) 26%, transparent);
-  --chart-peer: color-mix(in srgb, var(--ink) 38%, transparent);
-  --chart-band: color-mix(in srgb, #2f6b54 14%, transparent);
+  --chart-tooltip-border: rgba(246, 238, 220, 0.26);
+  --chart-tick: #5f6f64;
+  --chart-grid: rgba(20, 35, 29, 0.08);
+  --chart-axis: rgba(20, 35, 29, 0.18);
+  --chart-point-border: #fbf6e8;
+  --chart-field: #5f7f96;
+  --chart-field-trace: color-mix(in srgb, var(--chart-field) 18%, transparent);
+  --chart-peer: color-mix(in srgb, var(--chart-field) 48%, transparent);
+  --chart-band: color-mix(in srgb, var(--chart-field) 14%, transparent);
+  --chart-median: #4f7288;
   --chart-series-1: #b23b1e;
   --chart-series-2: #2f6b54;
   --chart-series-3: #96661a;

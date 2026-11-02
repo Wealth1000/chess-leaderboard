@@ -154,42 +154,56 @@ export default function FieldChart({
         rootStyle.getPropertyValue("--mono").trim() || "monospace";
       const bodyFont =
         rootStyle.getPropertyValue("--body").trim() || "sans-serif";
-      const tooltipBg = readColorToken(rootStyle, "--chart-tooltip-bg", "#14231d");
+      const tooltipBg = readColorToken(
+        rootStyle,
+        "--chart-tooltip-bg",
+        "#14231d",
+      );
       const tooltipText = readColorToken(
         rootStyle,
         "--chart-tooltip-text",
         "#f6eedc",
       );
-      const tickColor = readColorToken(rootStyle, "--chart-tick", "#5d6c60");
+      const tooltipBorder = readColorToken(
+        rootStyle,
+        "--chart-tooltip-border",
+        "rgba(246, 238, 220, 0.26)",
+      );
+      const tickColor = readColorToken(rootStyle, "--chart-tick", "#5f6f64");
       const gridColor = readColorToken(
         rootStyle,
         "--chart-grid",
-        "rgba(20, 35, 29, 0.12)",
+        "rgba(20, 35, 29, 0.08)",
       );
       const axisColor = readColorToken(
         rootStyle,
         "--chart-axis",
-        "rgba(20, 35, 29, 0.22)",
+        "rgba(20, 35, 29, 0.18)",
       );
       const pointBorderColor = readColorToken(
         rootStyle,
         "--chart-point-border",
-        "#fcf7ea",
+        "#fbf6e8",
       );
       const fieldColor = readColorToken(
         rootStyle,
-        "--chart-field",
-        "rgba(20, 35, 29, 0.26)",
+        "--chart-field-trace",
+        "rgba(95, 127, 150, 0.18)",
       );
       const peerColor = readColorToken(
         rootStyle,
         "--chart-peer",
-        "rgba(20, 35, 29, 0.38)",
+        "rgba(95, 127, 150, 0.48)",
       );
       const bandColor = readColorToken(
         rootStyle,
         "--chart-band",
-        "rgba(47, 107, 84, 0.14)",
+        "rgba(95, 127, 150, 0.14)",
+      );
+      const medianColor = readColorToken(
+        rootStyle,
+        "--chart-median",
+        "#4f7288",
       );
       const topColors = TOP_SERIES_TOKENS.map((token, index) =>
         readColorToken(rootStyle, token, TOP_SERIES_FALLBACKS[index]),
@@ -197,6 +211,9 @@ export default function FieldChart({
       const reducedMotion = window.matchMedia(
         "(prefers-reduced-motion: reduce)",
       ).matches;
+      const chartLayout = {
+        padding: { top: 10, right: 10, bottom: 2, left: 4 },
+      };
 
       let config: ChartConfiguration<"line">;
 
@@ -271,6 +288,7 @@ export default function FieldChart({
             responsive: true,
             maintainAspectRatio: false,
             animation: reducedMotion ? false : { duration: 480 },
+            layout: chartLayout,
             interaction: { mode: "index", intersect: false },
             plugins: {
               legend: { display: false },
@@ -278,6 +296,9 @@ export default function FieldChart({
                 backgroundColor: tooltipBg,
                 titleColor: tooltipText,
                 bodyColor: tooltipText,
+                borderColor: tooltipBorder,
+                borderWidth: 1,
+                cornerRadius: 0,
                 padding: 10,
                 titleFont: { family: monoFont, size: 10 },
                 bodyFont: { family: bodyFont, size: 12 },
@@ -331,50 +352,99 @@ export default function FieldChart({
         const leaders = field.leaders;
         const topIds = new Set(leaders.map((entry) => entry.playerId));
         const hasHistory = dates.length > 1;
+        const bandByDate = new Map(
+          field.band.map((entry) => [entry.date, entry]),
+        );
 
         config = {
           type: "line",
           data: {
             labels: dates.map(formatShortDate),
-            datasets: field.series.map((series) => {
-              const points = pointsByDate(series);
-              const topIndex = leaders.findIndex(
-                (entry) => entry.playerId === series.playerId,
-              );
-              const isTop = topIds.has(series.playerId);
-              const color = topIndex >= 0 ? topColors[topIndex] : fieldColor;
-
-              return {
-                label: series.playerName,
-                data: dates.map((date) => points.get(date) ?? null),
-                borderColor: color,
-                backgroundColor: color,
-                borderWidth: isTop ? 2.2 : 1,
-                pointRadius: hasHistory ? (isTop ? 3 : 0) : isTop ? 4 : 2.5,
-                pointHoverRadius: 6,
-                pointBackgroundColor: color,
+            datasets: [
+              {
+                label: "Middle 50% minimum",
+                data: dates.map((date) => bandByDate.get(date)?.min ?? null),
+                borderColor: "transparent",
+                backgroundColor: "transparent",
+                pointRadius: 0,
+                pointHoverRadius: 0,
+                fill: false,
+                order: 5,
+              },
+              {
+                label: "Middle 50% maximum",
+                data: dates.map((date) => bandByDate.get(date)?.max ?? null),
+                borderColor: "transparent",
+                backgroundColor: bandColor,
+                pointRadius: 0,
+                pointHoverRadius: 0,
+                fill: "-1",
+                order: 5,
+              },
+              {
+                label: "Median",
+                data: dates.map((date) => bandByDate.get(date)?.median ?? null),
+                borderColor: medianColor,
+                backgroundColor: medianColor,
+                borderWidth: 1.5,
+                pointRadius: 0,
+                pointHoverRadius: 4,
+                pointBackgroundColor: medianColor,
                 pointBorderColor,
-                pointBorderWidth: isTop ? 1.5 : 1,
-                tension: 0.24,
+                pointBorderWidth: 1,
+                tension: 0.2,
                 spanGaps: true,
                 fill: false,
-              };
-            }),
+                order: 2,
+              },
+              ...field.series.map((series) => {
+                const points = pointsByDate(series);
+                const topIndex = leaders.findIndex(
+                  (entry) => entry.playerId === series.playerId,
+                );
+                const isTop = topIds.has(series.playerId);
+                const color = topIndex >= 0 ? topColors[topIndex] : fieldColor;
+
+                return {
+                  label: series.playerName,
+                  data: dates.map((date) => points.get(date) ?? null),
+                  borderColor: color,
+                  backgroundColor: color,
+                  borderWidth: isTop ? 2.2 : 1,
+                  pointRadius: hasHistory ? (isTop ? 3 : 0) : isTop ? 4 : 2.5,
+                  pointHoverRadius: 6,
+                  pointBackgroundColor: color,
+                  pointBorderColor,
+                  pointBorderWidth: isTop ? 1.5 : 1,
+                  tension: 0.24,
+                  spanGaps: true,
+                  fill: false,
+                  order: isTop ? 1 : 3,
+                };
+              }),
+            ],
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
             animation: reducedMotion ? false : { duration: 480 },
-            interaction: { mode: "nearest", intersect: true },
+            layout: chartLayout,
+            interaction: { mode: "nearest", intersect: false },
             plugins: {
               legend: { display: false },
               tooltip: {
                 backgroundColor: tooltipBg,
                 titleColor: tooltipText,
                 bodyColor: tooltipText,
+                borderColor: tooltipBorder,
+                borderWidth: 1,
+                cornerRadius: 0,
                 padding: 10,
                 titleFont: { family: monoFont, size: 10 },
                 bodyFont: { family: bodyFont, size: 12 },
+                filter: (item) =>
+                  item.dataset.label !== "Middle 50% minimum" &&
+                  item.dataset.label !== "Middle 50% maximum",
                 callbacks: {
                   label: (context) =>
                     `${context.dataset.label}: ${formatNumber(
@@ -443,6 +513,7 @@ export default function FieldChart({
 
   const clearFocus = () => {
     onClearFocus();
+    onModeChange("field");
     setPickerOpen(false);
     setQuery("");
   };
@@ -450,11 +521,9 @@ export default function FieldChart({
   const modeLabel = mode === "field" ? "Field mode" : "Focus mode";
   const canvasLabel =
     mode === "field"
-      ? `${platformName} ${categoryName} category ratings, ${rangeName} range, field mode. ${
-          field.series.length === 1
-            ? "1 rated player"
-            : `${field.series.length} rated player lines`
-        }.`
+      ? `${platformName} ${categoryName} category ratings, ${rangeName} range, field mode. Middle 50% band, median line, top five players, and ${
+          field.series.length
+        } player ${field.series.length === 1 ? "trace" : "traces"}.`
       : focus
         ? `${platformName} ${categoryName} rating change, ${rangeName} range, focus mode. ${focus.playerName} compared with ${focus.peers.length} nearby ${
             focus.peers.length === 1 ? "player" : "players"
@@ -466,7 +535,7 @@ export default function FieldChart({
       ? "One snapshot in range. Lines begin after the next daily update."
       : `${field.dates.length} snapshots · ${field.series.length} rated ${
           field.series.length === 1 ? "player" : "players"
-        } · one line per player`;
+        }`;
 
   return (
     <section
@@ -516,22 +585,18 @@ export default function FieldChart({
           </div>
 
           <div className={styles.focusBar}>
-            <span className={styles.focusStatus}>
-              {focus ? (
-                <>
-                  Focused <strong>{focus.playerName}</strong>
-                </>
-              ) : (
-                "No player focused"
-              )}
-            </span>
+            {focus ? (
+              <span className={styles.focusStatus}>
+                Focused <strong>{focus.playerName}</strong>
+              </span>
+            ) : null}
             <button
               type="button"
-              className={styles.textButton}
+              className={styles.findButton}
               aria-expanded={showPicker}
               onClick={() => setPickerOpen((open) => !open)}
             >
-              {focus ? "Change player" : "Choose player"}
+              {focus ? "Change player" : "Find a player"}
             </button>
             {focus ? (
               <button
@@ -603,7 +668,10 @@ export default function FieldChart({
         {mode === "field" ? (
           <>
             <div className={styles.cardHead}>
-              <div className={styles.legend} aria-label="Top five players">
+              <div
+                className={styles.legend}
+                aria-label="Top five players and field key"
+              >
                 {field.leaders.map((entry, index) => (
                   <span className={styles.legendItem} key={entry.playerId}>
                     <span
@@ -627,6 +695,24 @@ export default function FieldChart({
                     : `${platformName} · no data in range`}
               </p>
             </div>
+
+            {!loading && field.hasData ? (
+              <div className={styles.fieldKey} aria-label="Chart key">
+                <span className={styles.fieldKeyItem}>
+                  <span className={styles.keyBand} aria-hidden="true" />
+                  Middle 50%
+                </span>
+                <span className={styles.fieldKeyItem}>
+                  <span className={styles.keyMedian} aria-hidden="true" />
+                  Median
+                </span>
+                <span className={styles.fieldKeyItem}>
+                  <span className={styles.keyTrace} aria-hidden="true" />
+                  All {field.series.length}{" "}
+                  {field.series.length === 1 ? "player" : "players"}
+                </span>
+              </div>
+            ) : null}
 
             {!loading && field.hasData && clampCeiling != null ? (
               <p className={styles.clampNote}>

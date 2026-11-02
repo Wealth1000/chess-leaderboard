@@ -73,27 +73,36 @@ export default function RatingChart({
         PLATFORM_COLOR_TOKENS[platform],
         PLATFORM_COLOR_FALLBACKS[platform],
       );
-      const tooltipBg = readColorToken(rootStyle, "--chart-tooltip-bg", "#14231d");
+      const tooltipBg = readColorToken(
+        rootStyle,
+        "--chart-tooltip-bg",
+        "#14231d",
+      );
       const tooltipText = readColorToken(
         rootStyle,
         "--chart-tooltip-text",
         "#f6eedc",
       );
-      const tickColor = readColorToken(rootStyle, "--chart-tick", "#5d6c60");
+      const tooltipBorder = readColorToken(
+        rootStyle,
+        "--chart-tooltip-border",
+        "rgba(246, 238, 220, 0.26)",
+      );
+      const tickColor = readColorToken(rootStyle, "--chart-tick", "#5f6f64");
       const gridColor = readColorToken(
         rootStyle,
         "--chart-grid",
-        "rgba(20, 35, 29, 0.12)",
+        "rgba(20, 35, 29, 0.08)",
       );
       const axisColor = readColorToken(
         rootStyle,
         "--chart-axis",
-        "rgba(20, 35, 29, 0.22)",
+        "rgba(20, 35, 29, 0.18)",
       );
       const pointBorderColor = readColorToken(
         rootStyle,
         "--chart-point-border",
-        "#fcf7ea",
+        "#fbf6e8",
       );
 
       const config: ChartConfiguration<"line"> = {
@@ -125,6 +134,7 @@ export default function RatingChart({
             .matches
             ? false
             : { duration: 420 },
+          layout: { padding: { top: 10, right: 10, bottom: 2, left: 4 } },
           interaction: { mode: "index", intersect: false },
           plugins: {
             legend: { display: false },
@@ -132,6 +142,9 @@ export default function RatingChart({
               backgroundColor: tooltipBg,
               titleColor: tooltipText,
               bodyColor: tooltipText,
+              borderColor: tooltipBorder,
+              borderWidth: 1,
+              cornerRadius: 0,
               padding: 10,
               titleFont: { family: monoFont, size: 10 },
               bodyFont: { family: bodyFont, size: 12 },

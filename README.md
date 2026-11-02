@@ -13,7 +13,9 @@ ranked list.
 - **Fresh ratings**: The browser fetches the latest snapshots from a GitHub Gist,
   so a new rating update appears without rebuilding the site
 - **Charts**: Chart.js is loaded on demand for the player scorecard history and
-  the composite all-player field chart
+  the composite field chart. The field view summarises the club with a middle
+  50% band, median, and top-five lines; the focus view compares one player with
+  nearby ratings.
 - **Platforms and categories**: The view bar re-ranks the whole site, including
   the hero, board, scorecards, and charts, using one platform and one category
   at a time. Rankings always use the latest rating; the selected range only
@@ -138,6 +140,20 @@ than a standing.
   scorecard's "rank X of Y" all describe the set on screen, not the raw list.
 - Hiding is cosmetic. `buildRatingsView` still ranks every member, so revealing
   them restores their real rank and history with no recomputation.
+
+## Chart views
+
+The composite chart separates the field overview from individual lookup.
+
+- **Field** plots every rated player. The coloured top-five lines carry the
+  leader story; every other player stays on the canvas as a faint blue-pencil
+  trace. A middle-50% band (p25–p75) and median show the shape of the club
+  without turning 60 overlapping lines into a solid mass.
+- **Focus** is the lookup. **Find a player** searches the full roster and plots
+  the selected member against peers rated within 200 points at the baseline,
+  with a shaded peer range.
+- The board and list remain the complete roster index. A member can always be
+  found there even when their field trace is visually quiet.
 
 ## Chart range
 
