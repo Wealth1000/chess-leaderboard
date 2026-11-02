@@ -94,8 +94,9 @@
     },
     {
       "id": "eja-kelvin",
-      "name": "Eja-kelvin",
-      "chessCom": "eja-kelvin"
+      "name": "buddha.00",
+      "chessCom": "eja-kelvin",
+      "lichess": "chesscomisfree"
     },
     {
       "id": "dazainf",
@@ -304,12 +305,30 @@
     {
       "id": "brightbravo",
       "name": "for_sonbright",
-      "chessCom": "brightbravo"
+      "chessCom": "brightbravo",
+      "lichess": "BrightBravo"
     },
     {
       "id": "fifi_enko",
       "name": "Fifi_Enko",
+      "chessCom": "hazardous_nerd",
       "lichess": "Fifi_Enko"
+    },
+    {
+      "id": "levoltarien",
+      "name": "LeVoltarien",
+      "chessCom": "levoltarien",
+      "lichess": "Godsmann"
+    },
+    {
+      "id": "seigwartt",
+      "name": "!",
+      "chessCom": "seigwartt"
+    },
+    {
+      "id": "chimerix",
+      "name": "ᚲᚺᛁᛗᚨ",
+      "chessCom": "chimerix"
     }
   ],
   "formerIds": {

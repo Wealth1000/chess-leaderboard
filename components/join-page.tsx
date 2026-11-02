@@ -319,6 +319,11 @@ function JoinForm({ players, formId }: JoinFormProps) {
             Add-only. To change your details or remove yourself, DM ME (Wealth in
             the group).
           </p>
+          <p className={styles.note}>
+            No rating needed — the ladder reads ratings from Chess.com and
+            Lichess. New ratings appear after the next daily update, so
+            double-check your usernames and give it a day.
+          </p>
 
           <form className={styles.form} onSubmit={handleSubmit} noValidate>
             <input

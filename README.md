@@ -305,6 +305,10 @@ needed. The form asks for:
   APIs. A 404 means "no such account"; a 403, 429, or network failure means
   "couldn't verify" — the two are never reported as each other.
 
+No rating is collected: the site reads ratings from the platform APIs. New
+members appear after the next daily fetch, so a missing rating usually means a
+mistyped username or a wait until tomorrow.
+
 The form refuses a tag or handle already on the board, always with the same
 sentence: DM the maintainer. There is no edit or delete path on the site.
 
