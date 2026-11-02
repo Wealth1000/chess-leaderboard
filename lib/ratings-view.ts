@@ -297,6 +297,44 @@ export function buildRatingsView(
   const snapshotAt = (playerId: string, date: string) =>
     snapshotsByPlayerDate.get(playerId)?.get(date) ?? null;
 
+  // Newest first, so the fallback lookup below can short-circuit on the
+  // previous rated day instead of walking the whole season.
+  const datesByPlayer = new Map<string, string[]>();
+  for (const [playerId, byDate] of snapshotsByPlayerDate) {
+    datesByPlayer.set(playerId, [...byDate.keys()].sort().reverse());
+  }
+
+  /**
+   * The member's current rating, tolerating a hole in the newest snapshot.
+   *
+   * Ratings only disappear from a snapshot when the upstream fetch failed;
+   * a real account keeps its last rating indefinitely. Falling back to the
+   * most recent day that has a number means one bad Chess.com response cannot
+   * turn a rated member into "unrated" for the whole view.
+   */
+  const latestRatingFor = (
+    player: Player,
+    platform: Platform,
+    category: Category,
+  ) => {
+    const handle = handleFor(player, platform);
+    if (!handle) return null;
+
+    for (const date of datesByPlayer.get(player.id) ?? []) {
+      const snapshot = snapshotAt(player.id, date);
+      const entry = snapshot?.ratings.find(
+        (rating) =>
+          rating.platform === platform &&
+          rating.category === category &&
+          rating.username === handle &&
+          typeof rating.rating === "number",
+      );
+      if (entry) return entry.rating;
+    }
+
+    return null;
+  };
+
   const latestSnapshotFor = (playerId: string) =>
     latestDate ? snapshotAt(playerId, latestDate) : null;
 
@@ -368,7 +406,7 @@ export function buildRatingsView(
   const ranked: RankedPlayer[] = players
     .map((player) => {
       const snapshot = latestSnapshotFor(player.id);
-      const rating = ratingFromSnapshot(snapshot, player, platform, category);
+      const rating = latestRatingFor(player, platform, category);
       const platforms = snapshot
         ? [
             ...new Set(
@@ -456,8 +494,22 @@ export function buildRatingsView(
     const matrix: ScorecardMatrixRow[] = ALL_CATEGORIES.map((entry) => ({
       category: entry,
       cells: {
-        "chess.com": buildCell(player, "chess.com", entry, ranking.snapshot, view),
-        lichess: buildCell(player, "lichess", entry, ranking.snapshot, view),
+        "chess.com": buildCell(
+          player,
+          "chess.com",
+          entry,
+          ranking.snapshot,
+          view,
+          latestRatingFor(player, "chess.com", entry),
+        ),
+        lichess: buildCell(
+          player,
+          "lichess",
+          entry,
+          ranking.snapshot,
+          view,
+          latestRatingFor(player, "lichess", entry),
+        ),
       },
     }));
 
@@ -548,8 +600,9 @@ function cellReasonFor(
   );
 
   if (!entry) return "no-data";
+  if (rating != null) return "rated";
   if (entry.rating == null) return "not-played";
-  return rating == null ? "no-data" : "rated";
+  return "no-data";
 }
 
 function buildCell(
@@ -558,9 +611,10 @@ function buildCell(
   category: Category,
   snapshot: Snapshot | null,
   view: ViewState,
+  latestRating: number | null,
 ): ScorecardCell {
   const username = handleFor(player, platform);
-  const rating = ratingFromSnapshot(snapshot, player, platform, category);
+  const rating = latestRating;
   const reason = cellReasonFor(
     player,
     platform,

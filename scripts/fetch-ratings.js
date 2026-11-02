@@ -24,6 +24,28 @@ function isNumber(value) {
   return typeof value === 'number' && Number.isFinite(value);
 }
 
+/**
+ * Chess.com answers a genuine unknown user with a 404 whose body says
+ * `User "name" not found.` It also answers some existing accounts with a 404
+ * whose body says "An internal error has occurred". The status is the same;
+ * the meaning is not. Only the first is evidence of absence. A missing body
+ * (older fixtures) keeps the historical 404-means-missing behaviour.
+ */
+function isMissingResponse(status, body) {
+  if (status !== 404) return false;
+  if (typeof body !== 'string' || body.trim() === '') return true;
+
+  const text = body.toLowerCase();
+  if (text.includes('internal error')) return false;
+  return text.includes('not found') || text.includes('notfound');
+}
+
+function isErrorPayload(json) {
+  return !!json && typeof json === 'object' && !Array.isArray(json) &&
+    !('chess_rapid' in json) && !('tactics' in json) &&
+    ('message' in json || 'error' in json);
+}
+
 function emptyRatings() {
   return Object.fromEntries(CATEGORIES.map(category => [category, null]));
 }
@@ -164,6 +186,61 @@ function isV2Entry(entry) {
 
 function isV2Document(document) {
   return !!document && typeof document === 'object' && document.version === 2;
+}
+
+/**
+ * The newest earlier snapshot that still carries numeric ratings for one
+ * platform. Entries with an empty `ratings` map are skipped: those are the
+ * result of a failed fetch, so using them as the fallback would keep the hole
+ * alive on every subsequent run.
+ */
+function latestV2Account(snapshots, playerId, platform) {
+  let best = null;
+
+  for (const snapshot of snapshots || []) {
+    if (!snapshot || snapshot.playerId !== playerId || !snapshot.date) continue;
+    if (!isV2Entry(snapshot)) continue;
+
+    const account = snapshot.accounts?.[platform];
+    if (!account || typeof account !== 'object') continue;
+    if (!Object.values(account.ratings || {}).some(isNumber)) continue;
+
+    if (!best || snapshot.date > best.date) {
+      best = { date: snapshot.date, account };
+    }
+  }
+
+  return best;
+}
+
+function latestV2ChessComExtras(snapshots, playerId) {
+  let best = null;
+
+  for (const snapshot of snapshots || []) {
+    if (!snapshot || snapshot.playerId !== playerId || !snapshot.date) continue;
+    if (!isV2Entry(snapshot) || !snapshot.chessComExtras) continue;
+
+    if (!best || snapshot.date > best.date) {
+      best = { date: snapshot.date, extras: snapshot.chessComExtras };
+    }
+  }
+
+  return best;
+}
+
+/**
+ * A failed fetch must not erase a rating. Return the most recent account entry
+ * for the same handle, or null when the handle changed (in which case the old
+ * ratings belong to a different account and must not be borrowed).
+ */
+function carryForwardAccount(player, platform, previousSnapshots, username) {
+  const carried = latestV2Account(previousSnapshots, player.id, platform);
+  if (!carried) return null;
+
+  const stored = String(carried.account.username || '').toLowerCase();
+  if (stored !== username.toLowerCase()) return null;
+
+  return carried;
 }
 
 // Build one account entry in the v2 compact shape. Numeric ratings go in
@@ -328,22 +405,22 @@ function requestJson(options, label) {
         if (res.statusCode < 200 || res.statusCode >= 300) {
           const preview = body.trim().slice(0, 160);
           console.error(`  ${label}: HTTP ${res.statusCode}${preview ? ` (${preview})` : ''}`);
-          resolve(null);
+          resolve({ status: res.statusCode, json: null, body });
           return;
         }
 
         try {
-          resolve(JSON.parse(body));
+          resolve({ status: res.statusCode, json: JSON.parse(body) });
         } catch (error) {
           console.error(`  ${label}: invalid JSON response`);
-          resolve(null);
+          resolve({ status: res.statusCode, json: null, body });
         }
       });
     });
 
     req.on('error', (error) => {
       console.error(`  ${label}: ${error.message}`);
-      resolve(null);
+      resolve({ status: null, json: null });
     });
 
     req.setTimeout(REQUEST_TIMEOUT_MS, () => {
@@ -352,8 +429,8 @@ function requestJson(options, label) {
   });
 }
 
-async function fetchChessComStats(username) {
-  const json = await requestJson({
+async function fetchChessComStats(username, request = requestJson) {
+  const { status, json, body } = await request({
     hostname: 'api.chess.com',
     path: `/pub/player/${encodeURIComponent(username)}/stats`,
     method: 'GET',
@@ -361,19 +438,42 @@ async function fetchChessComStats(username) {
   }, `chess.com ${username}`);
 
   if (!json) {
-    return { ratings: emptyRatings(), gamesPlayed: {}, extras: emptyChessComExtras() };
+    const missing = isMissingResponse(status, body);
+    return {
+      ratings: emptyRatings(),
+      gamesPlayed: {},
+      extras: emptyChessComExtras(),
+      missing,
+      unavailable: !missing
+    };
+  }
+
+  if (isErrorPayload(json)) {
+    return {
+      ratings: emptyRatings(),
+      gamesPlayed: {},
+      extras: emptyChessComExtras(),
+      missing: false,
+      unavailable: true
+    };
   }
 
   try {
-    return parseChessComStats(json);
+    return { ...parseChessComStats(json), missing: false, unavailable: false };
   } catch (error) {
     console.error(`  chess.com ${username}: could not parse stats (${error.message})`);
-    return { ratings: emptyRatings(), gamesPlayed: {}, extras: emptyChessComExtras() };
+    return {
+      ratings: emptyRatings(),
+      gamesPlayed: {},
+      extras: emptyChessComExtras(),
+      missing: false,
+      unavailable: true
+    };
   }
 }
 
-async function fetchLichessStats(username) {
-  const json = await requestJson({
+async function fetchLichessStats(username, request = requestJson) {
+  const { status, json, body } = await request({
     hostname: 'lichess.org',
     path: `/api/user/${encodeURIComponent(username)}?profile=true`,
     method: 'GET',
@@ -381,14 +481,34 @@ async function fetchLichessStats(username) {
   }, `lichess ${username}`);
 
   if (!json) {
-    return { ratings: emptyRatings(), gamesPlayed: {} };
+    const missing = isMissingResponse(status, body);
+    return {
+      ratings: emptyRatings(),
+      gamesPlayed: {},
+      missing,
+      unavailable: !missing
+    };
+  }
+
+  if (isErrorPayload(json)) {
+    return {
+      ratings: emptyRatings(),
+      gamesPlayed: {},
+      missing: false,
+      unavailable: true
+    };
   }
 
   try {
-    return parseLichessStats(json);
+    return { ...parseLichessStats(json), missing: false, unavailable: false };
   } catch (error) {
     console.error(`  lichess ${username}: could not parse stats (${error.message})`);
-    return { ratings: emptyRatings(), gamesPlayed: {} };
+    return {
+      ratings: emptyRatings(),
+      gamesPlayed: {},
+      missing: false,
+      unavailable: true
+    };
   }
 }
 
@@ -413,7 +533,7 @@ function fetchExistingSnapshots() {
     path: `/gists/${GIST_ID}`,
     method: 'GET',
     headers: { 'User-Agent': 'ChessLeaderboard/1.0' }
-  }, 'gist').then((gist) => {
+  }, 'gist').then(({ json: gist }) => {
     if (!gist) {
       console.log('No existing gist data, starting fresh');
       return { snapshots: [] };
@@ -477,32 +597,117 @@ function updateGist(snapshots) {
   });
 }
 
-async function buildPlayerSnapshot(player, today) {
+async function buildPlayerSnapshot(
+  player,
+  today,
+  missingAccounts,
+  previousSnapshots = [],
+  unavailableAccounts = []
+) {
   const accounts = {};
   let chessComExtras = null;
+
+  // Reuse the last good account when today's fetch failed. Writing an empty
+  // entry instead would make the member look unrated and would also be the
+  // fallback for the next run, so one failure would erase the rating forever.
+  const keepKnown = (platform, username) => {
+    const carried = carryForwardAccount(player, platform, previousSnapshots, username);
+    if (carried) accounts[platform] = carried.account;
+    return carried ? carried.date : null;
+  };
 
   if (player.chessCom) {
     const username = player.chessCom.toLowerCase();
     try {
       const result = await fetchChessComStats(username);
-      accounts['chess.com'] = buildV2Account(username, result.ratings, result.gamesPlayed);
-      chessComExtras = result.extras;
-      console.log(`  chess.com (${username}): ${formatRatings(result.ratings)} | ${formatChessComExtras(result.extras)}`);
+
+      if (result.unavailable) {
+        const kept = keepKnown('chess.com', username);
+        const carriedExtras = latestV2ChessComExtras(previousSnapshots, player.id);
+        if (carriedExtras) chessComExtras = carriedExtras.extras;
+        accounts['chess.com'] = accounts['chess.com'] ||
+          buildV2Account(username, emptyRatings(), {});
+        chessComExtras = chessComExtras || emptyChessComExtras();
+        unavailableAccounts.push({
+          playerId: player.id,
+          name: player.name,
+          platform: 'chess.com',
+          username,
+          kept
+        });
+        console.warn(`  ⚠️  chess.com (${username}): stats unavailable${kept ? `; kept ${kept} ratings` : '; no prior ratings'}`);
+      } else {
+        accounts['chess.com'] = buildV2Account(username, result.ratings, result.gamesPlayed);
+        chessComExtras = result.extras;
+        console.log(`  chess.com (${username}): ${formatRatings(result.ratings)} | ${formatChessComExtras(result.extras)}`);
+        if (result.missing) {
+          missingAccounts.push({
+            playerId: player.id,
+            name: player.name,
+            platform: 'chess.com',
+            username
+          });
+          console.warn(`  ⚠️  chess.com (${username}): account not found (HTTP 404)`);
+        }
+      }
     } catch (error) {
       console.error(`  chess.com (${username}): ${error.message}`);
-      accounts['chess.com'] = buildV2Account(username, emptyRatings(), {});
-      chessComExtras = emptyChessComExtras();
+      const kept = keepKnown('chess.com', username);
+      accounts['chess.com'] = accounts['chess.com'] ||
+        buildV2Account(username, emptyRatings(), {});
+      chessComExtras = latestV2ChessComExtras(previousSnapshots, player.id)?.extras ||
+        emptyChessComExtras();
+      unavailableAccounts.push({
+        playerId: player.id,
+        name: player.name,
+        platform: 'chess.com',
+        username,
+        kept
+      });
     }
   }
 
   if (player.lichess) {
     try {
       const result = await fetchLichessStats(player.lichess);
-      accounts.lichess = buildV2Account(player.lichess, result.ratings, result.gamesPlayed);
-      console.log(`  lichess (${player.lichess}): ${formatRatings(result.ratings)}`);
+
+      if (result.unavailable) {
+        const kept = keepKnown('lichess', player.lichess);
+        accounts.lichess = accounts.lichess ||
+          buildV2Account(player.lichess, emptyRatings(), {});
+        unavailableAccounts.push({
+          playerId: player.id,
+          name: player.name,
+          platform: 'lichess',
+          username: player.lichess,
+          kept
+        });
+        console.warn(`  ⚠️  lichess (${player.lichess}): stats unavailable${kept ? `; kept ${kept} ratings` : '; no prior ratings'}`);
+      } else {
+        accounts.lichess = buildV2Account(player.lichess, result.ratings, result.gamesPlayed);
+        console.log(`  lichess (${player.lichess}): ${formatRatings(result.ratings)}`);
+        if (result.missing) {
+          missingAccounts.push({
+            playerId: player.id,
+            name: player.name,
+            platform: 'lichess',
+            username: player.lichess
+          });
+          console.warn(`  ⚠️  lichess (${player.lichess}): account not found (HTTP 404)`);
+        }
+      }
     } catch (error) {
       console.error(`  lichess (${player.lichess}): ${error.message}`);
-      accounts.lichess = buildV2Account(player.lichess, emptyRatings(), {});
+      const kept = keepKnown('lichess', player.lichess);
+      accounts.lichess = accounts.lichess ||
+        buildV2Account(player.lichess, emptyRatings(), {});
+      unavailableAccounts.push({
+        playerId: player.id,
+        name: player.name,
+        platform: 'lichess',
+        username: player.lichess,
+        kept
+      });
     }
   }
 
@@ -545,17 +750,46 @@ async function main() {
   }
 
   const newSnapshots = [];
+  const missingAccounts = [];
+  const unavailableAccounts = [];
 
   for (const player of players.players) {
     console.log(`Fetching ${player.name}...`);
 
     try {
-      newSnapshots.push(await buildPlayerSnapshot(player, today));
+      newSnapshots.push(await buildPlayerSnapshot(
+        player,
+        today,
+        missingAccounts,
+        existing.snapshots,
+        unavailableAccounts
+      ));
     } catch (error) {
       console.error(`  ${player.name}: unexpected failure (${error.message})`);
     }
 
     await new Promise(resolve => setTimeout(resolve, 200));
+  }
+
+  // A missing account is reported, never repaired: the fetcher cannot know
+  // whether the member renamed, deleted, or was mistyped, and silently dropping
+  // them would make the leaderboard argue with the group chat.
+  if (missingAccounts.length > 0) {
+    console.warn(`\n⚠️  ${missingAccounts.length} account(s) not found. Nothing was removed.`);
+    console.warn('   Fix the handle in data/players.json, or remove the player, then re-run.');
+    for (const entry of missingAccounts) {
+      console.warn(`   ${entry.playerId} (${entry.name}) · ${entry.platform} · ${entry.username}`);
+    }
+  }
+
+  if (unavailableAccounts.length > 0) {
+    console.warn(`\n⚠️  ${unavailableAccounts.length} account(s) could not be fetched. Kept the last known ratings where available.`);
+    for (const entry of unavailableAccounts) {
+      console.warn(
+        `   ${entry.playerId} (${entry.name}) · ${entry.platform} · ${entry.username}` +
+        (entry.kept ? ` · kept ${entry.kept}` : ' · no prior ratings')
+      );
+    }
   }
 
   const replaced = existing.snapshots.filter(snapshot => (
@@ -585,6 +819,11 @@ module.exports = {
   CHESSCOM_SOURCES,
   parseChessComStats,
   parseLichessStats,
+  fetchChessComStats,
+  fetchLichessStats,
+  isMissingResponse,
+  latestV2Account,
+  carryForwardAccount,
   mergeSnapshots,
   buildFormerIdMap,
   remapFormerIds,

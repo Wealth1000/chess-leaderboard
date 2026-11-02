@@ -180,6 +180,14 @@ focus and small accent text.
    category. A failed fetch leaves the player list usable and shows a data
    warning.
 
+A fetch failure is not a reason to erase a rating. Chess.com sometimes answers
+an existing account with a 404 whose body says "An internal error has occurred"
+rather than "User not found"; the fetcher treats only the latter as missing.
+For any other failure it keeps the newest earlier ratings for that account and
+warns, and the browser view falls back to the most recent rated day if the
+newest snapshot has a hole. One bad response therefore cannot turn a rated
+member into "unrated" or remove their history.
+
 ## Rating categories
 
 The fetcher requests every supported category explicitly. There is no

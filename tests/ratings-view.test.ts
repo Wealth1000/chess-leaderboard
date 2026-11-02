@@ -1077,3 +1077,67 @@ describe("layout invariance", () => {
     expect(list.notice).toEqual(board.notice);
   });
 });
+
+describe("a hole in the newest snapshot", () => {
+  it("keeps the last rated value instead of showing the member as unrated", () => {
+    const member = player("beeba", "beeba", {
+      chessCom: "unlikelyeffect",
+      lichess: "habooboo",
+    });
+    const snapshots = [
+      snapshot(member, "2026-10-21", [
+        rating("chess.com", "rapid", 1400),
+        rating("lichess", "rapid", 1779),
+      ]),
+      snapshot(member, "2026-10-22", [
+        rating("chess.com", "rapid", 1420),
+        rating("lichess", "rapid", 1781),
+      ]),
+      // Chess.com's stats endpoint failed on the newest day, so the fetcher
+      // wrote an empty account. The prior rating is still the member's rating.
+      snapshot(member, "2026-10-23", [
+        rating("chess.com", "rapid", null),
+        rating("lichess", "rapid", 1783),
+      ]),
+    ];
+
+    const model = buildRatingsView(
+      [member],
+      snapshots,
+      view({ platform: "chess.com", category: "rapid", range: "all" }),
+    );
+
+    expect(findPlayer(model, "beeba")?.rating).toBe(1420);
+    expect(model.ratedCount).toBe(1);
+    expect(scorecard(model, "beeba").currentRating).toBe(1420);
+    expect(matrixRow(model, "beeba", "rapid").cells["chess.com"]).toMatchObject({
+      rating: 1420,
+      reason: "rated",
+    });
+
+    // The chart is still built from real observations only; the fallback does
+    // not invent a 2026-10-23 point.
+    expect(model.field.series[0].points.at(-1)).toEqual({
+      date: "2026-10-22",
+      value: 1420,
+    });
+  });
+
+  it("does not invent a rating for a category that was never played", () => {
+    const member = player("member", "Member");
+    const snapshots = [
+      snapshot(member, "2026-10-23", [rating("chess.com", "rapid", null)]),
+    ];
+
+    const model = buildRatingsView(
+      [member],
+      snapshots,
+      view({ platform: "chess.com", category: "rapid" }),
+    );
+
+    expect(findPlayer(model, "member")?.rating).toBeNull();
+    expect(matrixRow(model, "member", "rapid").cells["chess.com"].reason).toBe(
+      "not-played",
+    );
+  });
+});
