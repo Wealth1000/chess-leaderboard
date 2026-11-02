@@ -554,30 +554,38 @@ function readExistingDocument(parsed) {
   };
 }
 
-function fetchExistingSnapshots() {
-  return requestJson({
+function fetchExistingSnapshots(request = requestJson) {
+  return request({
     hostname: 'api.github.com',
     path: `/gists/${GIST_ID}`,
     method: 'GET',
-    headers: { 'User-Agent': 'ChessLeaderboard/1.0' }
-  }, 'gist').then(({ json: gist }) => {
+    headers: {
+      'Authorization': `token ${GIST_TOKEN}`,
+      'User-Agent': 'ChessLeaderboard/1.0'
+    }
+  }, 'gist').then(({ status, json: gist }) => {
     if (!gist) {
-      console.log('No existing gist data, starting fresh');
-      return { snapshots: [] };
+      throw new Error(
+        `Could not read the existing gist (HTTP ${status ?? 'network error'}). ` +
+        'Refusing to overwrite history; re-run once GitHub is reachable.'
+      );
     }
 
     const snapshotFile = gist.files?.[SNAPSHOT_FILENAME];
     if (!snapshotFile?.content) {
-      console.log('No existing snapshot file, starting fresh');
-      return { snapshots: [] };
+      throw new Error(
+        `Existing gist has no ${SNAPSHOT_FILENAME}; refusing to start fresh. ` +
+        'Use RESET_SNAPSHOTS=1 only for a deliberate reset.'
+      );
     }
 
     try {
       const parsed = JSON.parse(snapshotFile.content);
       return readExistingDocument(parsed);
     } catch (error) {
-      console.error('Existing gist snapshot file is invalid JSON, starting fresh');
-      return { version: null, snapshots: [] };
+      throw new Error(
+        `Existing gist ${SNAPSHOT_FILENAME} is invalid JSON; refusing to overwrite it.`
+      );
     }
   });
 }
@@ -848,6 +856,7 @@ module.exports = {
   parseLichessStats,
   fetchChessComStats,
   fetchLichessStats,
+  fetchExistingSnapshots,
   isMissingResponse,
   latestAccount,
   carryForwardAccount,
