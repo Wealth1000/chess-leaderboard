@@ -20,10 +20,12 @@ export type ViewStateControls = {
   setRange: (range: RangeKey) => void;
   setFocusPlayer: (playerId: string | null) => void;
   setLayout: (layout: Layout) => void;
+  setShowHidden: (showHidden: boolean) => void;
+  setFullChartRange: (fullChartRange: boolean) => void;
 };
 
 /**
- * Persists the five view values under one localStorage key.
+ * Persists the view values under one localStorage key.
  *
  * The first render always uses the documented defaults so static export and
  * client hydration agree. Stored values are read in an effect, and writing is
@@ -77,6 +79,14 @@ export function useViewState(): ViewStateControls {
     setView((current) => ({ ...current, layout }));
   }, []);
 
+  const setShowHidden = useCallback((showHidden: boolean) => {
+    setView((current) => ({ ...current, showHidden }));
+  }, []);
+
+  const setFullChartRange = useCallback((fullChartRange: boolean) => {
+    setView((current) => ({ ...current, fullChartRange }));
+  }, []);
+
   return {
     view,
     setPlatform,
@@ -84,5 +94,7 @@ export function useViewState(): ViewStateControls {
     setRange,
     setFocusPlayer,
     setLayout,
+    setShowHidden,
+    setFullChartRange,
   };
 }

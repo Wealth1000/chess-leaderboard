@@ -66,6 +66,44 @@
   color: var(--page);
 }
 
+/*
+ * The hidden-player toggle is a filter, not a presentation mode, so it reads
+ * as an outline rather than filling like the Board/List switch.
+ */
+.hiddenToggle {
+  flex: 0 0 auto;
+  padding: 8px 10px 7px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink-muted);
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 0.57rem;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.hiddenToggle:hover {
+  border-color: var(--ink-muted);
+  background: color-mix(in srgb, var(--ink) 8%, transparent);
+  color: var(--ink);
+}
+
+.hiddenToggle:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.hiddenToggle[aria-pressed="true"] {
+  border-style: solid;
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
 .searchWrap {
   flex: 0 0 auto;
 }

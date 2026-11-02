@@ -20,6 +20,14 @@ export default function Masthead({ latestDate, loading }: MastheadProps) {
       </a>
 
       <div className={styles.controls}>
+        <div className={styles.links}>
+          <a className={styles.joinLink} href="./suggest/">
+            Suggestions
+          </a>
+          <a className={styles.joinLink} href="./join/">
+            Join the ladder
+          </a>
+        </div>
         <div className={styles.meta}>
           <span className={styles.statusDot} aria-hidden="true" />
           <span>Snapshot</span>

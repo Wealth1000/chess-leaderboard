@@ -1,4 +1,4 @@
-import { buildRatingsView } from "@/lib/ratings-view";
+import { buildRatingsView, DEFAULT_VIEW_STATE } from "@/lib/ratings-view";
 import type {
   Category,
   LeaderboardModel,
@@ -34,11 +34,10 @@ export function buildLeaderboard(
   category: MainCategory = "rapid",
 ): LeaderboardModel {
   const view = buildRatingsView(players, snapshots, {
+    ...DEFAULT_VIEW_STATE,
     platform,
     category,
     range: "7d",
-    focusPlayerId: null,
-    layout: "board",
   });
 
   return {

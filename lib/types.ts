@@ -7,6 +7,12 @@ export type MainCategory = "rapid" | "classical" | "blitz" | "puzzle";
 export type RangeKey = "7d" | "30d" | "90d" | "all";
 
 export type Player = {
+  /**
+   * The member's WhatsApp group tag, normalized to `[a-z0-9_]` — the name
+   * people use to tag them in the group chat (`wealth`, `beeba`, `da_kvng`).
+   * It is the snapshot key and is immutable once created: a tag change is a
+   * `formerIds` remap, because changing the id would split the history.
+   */
   id: string;
   name: string;
   chessCom?: string;
@@ -51,6 +57,13 @@ export type ViewState = {
   range: RangeKey;
   focusPlayerId: string | null;
   layout: Layout;
+  /**
+   * Reveal members with no account on the active platform. Hiding is cosmetic:
+   * the ratings model always keeps every member, and counts follow the screen.
+   */
+  showHidden: boolean;
+  /** Draw the field chart across its full axis instead of the clamped default. */
+  fullChartRange: boolean;
 };
 
 export type RatingChange = {

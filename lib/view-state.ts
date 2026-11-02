@@ -24,6 +24,10 @@ function isLayout(value: unknown): value is Layout {
   return value === "board" || value === "list";
 }
 
+function isBoolean(value: unknown): value is boolean {
+  return typeof value === "boolean";
+}
+
 /**
  * Normalizes a stored payload into a complete `ViewState`.
  *
@@ -52,5 +56,11 @@ export function resolveViewState(stored: unknown): ViewState {
         ? value.focusPlayerId
         : null,
     layout: isLayout(value.layout) ? value.layout : DEFAULT_VIEW_STATE.layout,
+    showHidden: isBoolean(value.showHidden)
+      ? value.showHidden
+      : DEFAULT_VIEW_STATE.showHidden,
+    fullChartRange: isBoolean(value.fullChartRange)
+      ? value.fullChartRange
+      : DEFAULT_VIEW_STATE.fullChartRange,
   };
 }

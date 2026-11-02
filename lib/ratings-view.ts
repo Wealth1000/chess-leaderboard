@@ -18,6 +18,8 @@ export const DEFAULT_VIEW_STATE: ViewState = {
   range: "7d",
   focusPlayerId: null,
   layout: "board",
+  showHidden: false,
+  fullChartRange: false,
 };
 
 export const MAIN_CATEGORIES: MainCategory[] = [
@@ -227,6 +229,36 @@ function aliasTextFor(player: Player) {
  */
 export function handleFor(player: Player, platform: Platform) {
   return (platform === "chess.com" ? player.chessCom : player.lichess) ?? null;
+}
+
+/**
+ * The ranking as the page should present it.
+ *
+ * This is the one place the "hidden" rule lives, and it is purely a view
+ * concern: `model.ranked` is never filtered. A member is hidden when they have
+ * no account on the active platform, because a row reading "No Lichess
+ * account" tells a reader nothing. A search query overrides hiding — a
+ * deliberate lookup is intent, not clutter — and `showHidden` restores
+ * everyone. The order is preserved exactly as ranked.
+ */
+export function selectVisibleRanked(
+  ranked: readonly RankedPlayer[],
+  options: { query: string; showHidden: boolean },
+): RankedPlayer[] {
+  const needle = options.query.trim().toLowerCase();
+
+  if (needle) {
+    return ranked.filter((player) => player.aliasText.includes(needle));
+  }
+
+  if (options.showHidden) return [...ranked];
+
+  return ranked.filter((player) => player.handle != null);
+}
+
+/** How many members the active platform's view hides by default. */
+export function countHiddenRanked(ranked: readonly RankedPlayer[]): number {
+  return ranked.filter((player) => player.handle == null).length;
 }
 
 /**

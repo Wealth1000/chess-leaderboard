@@ -11,6 +11,10 @@ import {
   rangeLabel,
 } from "@/lib/format";
 import type { ChartSeries, FocusModel, RatingsViewModel } from "@/lib/ratings-view";
+import {
+  chartAxisCeiling,
+  chartOutliersAbove,
+} from "@/lib/chart-scale";
 import type { Player, RatingChange } from "@/lib/types";
 import ChangeBadge from "./change-badge";
 import styles from "./field-chart.module.css";
@@ -47,9 +51,11 @@ type FieldChartProps = {
   loading: boolean;
   warning: boolean;
   mode: ChartMode;
+  fullChartRange: boolean;
   onModeChange: (mode: ChartMode) => void;
   onFocusPlayer: (playerId: string) => void;
   onClearFocus: () => void;
+  onFullChartRangeChange: (fullChartRange: boolean) => void;
 };
 
 function signed(value: number | null | undefined) {
@@ -79,9 +85,11 @@ export default function FieldChart({
   loading,
   warning,
   mode,
+  fullChartRange,
   onModeChange,
   onFocusPlayer,
   onClearFocus,
+  onFullChartRangeChange,
 }: FieldChartProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -94,6 +102,23 @@ export default function FieldChart({
   const focus = model.focus;
   const needsFocus = mode === "focus" && !focus;
   const showPicker = pickerOpen || needsFocus;
+
+  // The clamp is computed from the lines that are actually plotted, so it can
+  // never disagree with the legend or the hidden-player rule above it.
+  const plottedValues = useMemo(
+    () =>
+      field.series
+        .map((series) => series.latestValue)
+        .filter((value): value is number => value != null),
+    [field.series],
+  );
+  const clampCeiling = useMemo(
+    () => chartAxisCeiling(plottedValues, false),
+    [plottedValues],
+  );
+  const axisCeiling = fullChartRange ? null : clampCeiling;
+  const outliers =
+    clampCeiling == null ? 0 : chartOutliersAbove(plottedValues, clampCeiling);
 
   const focusChange = useMemo(
     () => (focus ? changeForFocus(focus, model.latestDate) : null),
@@ -372,6 +397,7 @@ export default function FieldChart({
               },
               y: {
                 beginAtZero: false,
+                max: axisCeiling ?? undefined,
                 border: { display: false },
                 grid: { color: gridColor },
                 title: {
@@ -399,6 +425,7 @@ export default function FieldChart({
       chart?.destroy();
     };
   }, [
+    axisCeiling,
     categoryName,
     field,
     focus,
@@ -600,6 +627,41 @@ export default function FieldChart({
                     : `${platformName} · no data in range`}
               </p>
             </div>
+
+            {!loading && field.hasData && clampCeiling != null ? (
+              <p className={styles.clampNote}>
+                {fullChartRange ? (
+                  <>
+                    <span>
+                      Full range · {outliers}{" "}
+                      {outliers === 1 ? "player" : "players"} above the usual
+                      view
+                    </span>
+                    <button
+                      type="button"
+                      className={styles.textButton}
+                      onClick={() => onFullChartRangeChange(false)}
+                    >
+                      Clamp to {formatNumber(clampCeiling)}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <span>
+                      Axis ends at {formatNumber(clampCeiling)} · {outliers}{" "}
+                      {outliers === 1 ? "player" : "players"} above
+                    </span>
+                    <button
+                      type="button"
+                      className={styles.textButton}
+                      onClick={() => onFullChartRangeChange(true)}
+                    >
+                      Show full range
+                    </button>
+                  </>
+                )}
+              </p>
+            ) : null}
 
             {loading ? (
               <div className={styles.empty}>Plotting the field…</div>

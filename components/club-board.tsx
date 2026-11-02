@@ -8,7 +8,11 @@ import {
   platformLabel,
 } from "@/lib/format";
 import { BOARD_SQUARES, getSeatInfo } from "@/lib/leaderboard";
-import type { RatingsViewModel } from "@/lib/ratings-view";
+import {
+  countHiddenRanked,
+  selectVisibleRanked,
+  type RatingsViewModel,
+} from "@/lib/ratings-view";
 import type { Layout } from "@/lib/types";
 import ChangeBadge, { changeLabel } from "./change-badge";
 import PlayerTable from "./player-table";
@@ -19,7 +23,9 @@ type ClubBoardProps = {
   loading: boolean;
   warning: boolean;
   layout: Layout;
+  showHidden: boolean;
   onLayoutChange: (layout: Layout) => void;
+  onShowHiddenChange: (showHidden: boolean) => void;
   onSelect: (playerId: string) => void;
 };
 
@@ -39,7 +45,9 @@ export default function ClubBoard({
   loading,
   warning,
   layout,
+  showHidden,
   onLayoutChange,
+  onShowHiddenChange,
   onSelect,
 }: ClubBoardProps) {
   const platformName = platformLabel(model.platform);
@@ -47,17 +55,24 @@ export default function ClubBoard({
   const [query, setQuery] = useState("");
   const boardRef = useRef<HTMLDivElement>(null);
 
-  const needle = query.trim().toLowerCase();
-  const filtering = needle.length > 0;
-  const visiblePlayers = useMemo(
-    () =>
-      filtering
-        ? model.ranked.filter((player) => player.aliasText.includes(needle))
-        : model.ranked,
-    [filtering, needle, model.ranked],
-  );
+  const filtering = query.trim().length > 0;
 
-  const seats = getSeatInfo(model.ranked.length);
+  // The rule itself lives in `selectVisibleRanked`; this component only asks
+  // for the two presentations of it: the standing set, and the searched set.
+  const basePlayers = useMemo(
+    () => selectVisibleRanked(model.ranked, { query: "", showHidden }),
+    [model.ranked, showHidden],
+  );
+  const visiblePlayers = useMemo(
+    () => selectVisibleRanked(model.ranked, { query, showHidden }),
+    [model.ranked, query, showHidden],
+  );
+  const hiddenCount = useMemo(() => countHiddenRanked(model.ranked), [model.ranked]);
+  const ratedVisible = visiblePlayers.filter(
+    (player) => player.rating != null,
+  ).length;
+
+  const seats = getSeatInfo(basePlayers.length);
 
   const applyParity = useCallback(() => {
     const board = boardRef.current;
@@ -94,11 +109,12 @@ export default function ClubBoard({
     return () => observer.disconnect();
   }, [applyParity, layout]);
 
-  let countLabel = `${model.ranked.length} players`;
+  let countLabel = `${basePlayers.length} players`;
   if (loading) countLabel = "Loading…";
-  else if (filtering) countLabel = `${visiblePlayers.length} of ${model.ranked.length}`;
-  else if (model.ratedCount < model.ranked.length) {
-    countLabel = `${model.ratedCount} rated of ${model.ranked.length}`;
+  else if (filtering) {
+    countLabel = `${visiblePlayers.length} of ${basePlayers.length}`;
+  } else if (ratedVisible < basePlayers.length) {
+    countLabel = `${ratedVisible} rated of ${basePlayers.length}`;
   }
 
   let notice: string | null = null;
@@ -127,6 +143,18 @@ export default function ClubBoard({
           <h2 id="board-heading">Every player, ranked.</h2>
         </div>
         <div className={styles.boardTools}>
+          {hiddenCount > 0 ? (
+            <button
+              type="button"
+              className={styles.hiddenToggle}
+              aria-pressed={showHidden}
+              onClick={() => onShowHiddenChange(!showHidden)}
+            >
+              {showHidden
+                ? `Hide ${hiddenCount} hidden`
+                : `Show ${hiddenCount} hidden`}
+            </button>
+          ) : null}
           <div
             className={styles.layoutSwitch}
             role="group"

@@ -1,0 +1,72 @@
+name: Add Player
+
+on:
+  workflow_dispatch:
+    inputs:
+      whatsapp_tag:
+        description: "WhatsApp group tag (becomes the player id)"
+        required: true
+        type: string
+      name:
+        description: "Display name (leave blank to use the tag)"
+        required: false
+        type: string
+      chess_com:
+        description: "Chess.com username (blank if none)"
+        required: false
+        type: string
+      lichess:
+        description: "Lichess username (blank if none)"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+# Two submits actioned at once would both read the same players.json and one
+# push would be rejected; one runs at a time, and a queued run is not dropped.
+concurrency:
+  group: add-player
+  cancel-in-progress: false
+
+jobs:
+  add:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Fails the run before anything is written if the tag is taken, both
+      # handles are blank, an account 404s, or a handle is already on the board.
+      - name: Validate and append player
+        env:
+          WHATSAPP_TAG: ${{ inputs.whatsapp_tag }}
+          DISPLAY_NAME: ${{ inputs.name }}
+          CHESS_COM: ${{ inputs.chess_com }}
+          LICHESS: ${{ inputs.lichess }}
+        run: node scripts/add-player.js
+
+      # Writes today's snapshots for every member, including the new one, to the
+      # gist. If this fails the run stops here and nothing is committed.
+      - name: Fetch ratings
+        env:
+          GIST_ID: ${{ secrets.GIST_ID }}
+          GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
+        run: node scripts/fetch-ratings.js
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/players.json
+          git commit -m "Add member: ${ADDED_PLAYER_ID}"
+          git push origin HEAD:main
+
+      - name: Note the deploy
+        run: echo "Pushed \`${ADDED_PLAYER_ID}\` to main; the Pages deploy runs from that push." >> "$GITHUB_STEP_SUMMARY"

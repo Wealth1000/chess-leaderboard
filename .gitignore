@@ -20,5 +20,11 @@ pnpm-debug.log*
 # Snapshots are stored in a GitHub Gist; the player list is committed
 data/snapshots.json
 
+# Local environment (public build-time config)
+.env
+.env.local
+.env*.local
+!.env.example
+
 # Local planning/verification artifacts
 .scratch/

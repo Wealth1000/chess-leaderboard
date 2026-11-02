@@ -26,6 +26,8 @@ describe("resolveViewState", () => {
       range: "30d",
       focusPlayerId: "member",
       layout: "board",
+      showHidden: false,
+      fullChartRange: false,
     });
   });
 
@@ -60,6 +62,35 @@ describe("resolveViewState", () => {
       range: DEFAULT_VIEW_STATE.range,
       focusPlayerId: null,
       layout: "list",
+      showHidden: false,
+      fullChartRange: false,
+    });
+  });
+
+  it("decodes the boolean view toggles and rejects non-booleans", () => {
+    expect(
+      resolveViewState({ showHidden: true, fullChartRange: true }),
+    ).toMatchObject({ showHidden: true, fullChartRange: true });
+
+    expect(
+      resolveViewState({ showHidden: false, fullChartRange: false }),
+    ).toMatchObject({ showHidden: false, fullChartRange: false });
+
+    for (const bad of ["true", 1, 0, null, {}, []]) {
+      expect(
+        resolveViewState({ showHidden: bad, fullChartRange: bad }),
+      ).toMatchObject({ showHidden: false, fullChartRange: false });
+    }
+  });
+
+  it("decodes each boolean independently of the other", () => {
+    expect(resolveViewState({ showHidden: true })).toMatchObject({
+      showHidden: true,
+      fullChartRange: false,
+    });
+    expect(resolveViewState({ fullChartRange: true })).toMatchObject({
+      showHidden: false,
+      fullChartRange: true,
     });
   });
 

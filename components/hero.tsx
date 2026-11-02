@@ -6,16 +6,23 @@ import styles from "./hero.module.css";
 
 type HeroProps = {
   model: RatingsViewModel;
+  /** Members the page is actually presenting, after the hidden-player rule. */
+  visibleCount: number;
   loading: boolean;
   warning: boolean;
 };
 
-export default function Hero({ model, loading, warning }: HeroProps) {
+export default function Hero({
+  model,
+  visibleCount,
+  loading,
+  warning,
+}: HeroProps) {
   const platformName = platformLabel(model.platform);
   const categoryName = categoryLabel(model.category);
   const { leader, rated, average, top10, changesAvailable } = model;
   const leaderRating = leader?.rating ?? null;
-  const seats = getSeatInfo(model.ranked.length);
+  const seats = getSeatInfo(visibleCount);
 
   let meta = "Fetching the latest snapshot…";
   if (!loading) {
@@ -106,7 +113,7 @@ export default function Hero({ model, loading, warning }: HeroProps) {
       <dl className={styles.heroStats}>
         <div>
           <dt>Players</dt>
-          <dd>{formatNumber(model.ranked.length)}</dd>
+          <dd>{formatNumber(visibleCount)}</dd>
         </div>
         <div>
           <dt>Club average</dt>

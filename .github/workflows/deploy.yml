@@ -39,6 +39,8 @@ jobs:
         run: pnpm build
         env:
           NEXT_PUBLIC_BASE_PATH: /chess-leaderboard
+          NEXT_PUBLIC_FORMSPREE_JOIN_ID: ${{ vars.FORMSPREE_JOIN_ID }}
+          NEXT_PUBLIC_FORMSPREE_SUGGEST_ID: ${{ vars.FORMSPREE_SUGGEST_ID }}
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

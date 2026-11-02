@@ -303,6 +303,24 @@
   text-transform: uppercase;
 }
 
+/*
+ * The clamp is disclosed, not hidden: the axis ends where it says it does, and
+ * the count of members above it is stated beside the control that removes it.
+ */
+.clampNote {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin: 10px 0 0;
+  color: var(--ink-muted);
+  font-family: var(--mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .focusSummary {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));

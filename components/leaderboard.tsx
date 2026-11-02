@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useSnapshots } from "@/hooks/use-snapshots";
 import { useViewState } from "@/hooks/use-view-state";
 import { buildRatingsView } from "@/lib/ratings-view";
+import { selectVisibleRanked } from "@/lib/ratings-view";
 import type { Player } from "@/lib/types";
 import ClubBoard from "./club-board";
 import FieldChart from "./field-chart";
@@ -21,8 +22,16 @@ type ChartMode = "field" | "focus";
 
 export default function Leaderboard({ players }: LeaderboardProps) {
   const { snapshots, status } = useSnapshots();
-  const { view, setPlatform, setCategory, setRange, setFocusPlayer, setLayout } =
-    useViewState();
+  const {
+    view,
+    setPlatform,
+    setCategory,
+    setRange,
+    setFocusPlayer,
+    setLayout,
+    setShowHidden,
+    setFullChartRange,
+  } = useViewState();
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const [chartMode, setChartMode] = useState<ChartMode>("field");
 
@@ -32,6 +41,15 @@ export default function Leaderboard({ players }: LeaderboardProps) {
   const model = useMemo(
     () => buildRatingsView(players, snapshots, view),
     [players, snapshots, view],
+  );
+
+  const visibleCount = useMemo(
+    () =>
+      selectVisibleRanked(model.ranked, {
+        query: "",
+        showHidden: view.showHidden,
+      }).length,
+    [model.ranked, view.showHidden],
   );
 
   const selectedScorecard = selectedPlayerId
@@ -107,13 +125,20 @@ export default function Leaderboard({ players }: LeaderboardProps) {
       ) : null}
 
       <main>
-        <Hero model={model} loading={loading} warning={warning} />
+        <Hero
+          model={model}
+          visibleCount={visibleCount}
+          loading={loading}
+          warning={warning}
+        />
         <ClubBoard
           model={model}
           loading={loading}
           warning={warning}
           layout={view.layout}
+          showHidden={view.showHidden}
           onLayoutChange={setLayout}
+          onShowHiddenChange={setShowHidden}
           onSelect={setSelectedPlayerId}
         />
         <FieldChart
@@ -122,9 +147,11 @@ export default function Leaderboard({ players }: LeaderboardProps) {
           loading={loading}
           warning={warning}
           mode={chartMode}
+          fullChartRange={view.fullChartRange}
           onModeChange={setChartMode}
           onFocusPlayer={focusPlayer}
           onClearFocus={clearFocus}
+          onFullChartRangeChange={setFullChartRange}
         />
       </main>
 
@@ -138,7 +165,7 @@ export default function Leaderboard({ players }: LeaderboardProps) {
           key={`${view.platform}-${view.category}-${selectedScorecard.playerId}`}
           scorecard={selectedScorecard}
           model={model}
-          playerCount={players.length}
+          playerCount={visibleCount}
           onClose={closeDialog}
           onFocus={focusFromScorecard}
         />
